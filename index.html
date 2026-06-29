@@ -1044,7 +1044,7 @@
       state.data = await fetchAPI('GET', '/api/load');
       state.currentDate = pickInitialDate();
       $('#pin-view').style.display = 'none';
-      $('#app-view').style.display = '';
+      $('#app-view').style.display = 'block';
       renderAll();
     } catch (err) {
       state.pin = '';
