@@ -1,0 +1,23 @@
+# Node
+node_modules/
+package-lock.json
+npm-debug.log
+
+# Vercel
+.vercel/
+
+# Env (secrets)
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Local
+.claude/

@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>血液型 まいにち占い 編集室 (mockup)</title>
+<style>
+  :root {
+    --bg: #000; --card: #16181c; --panel: #101214; --border: #2f3336;
+    --text: #e7e9ea; --sub: #71767b; --accent: #1d9bf0;
+    --ok: #00ba7c; --ng: #f4212e;
+    --color-a: #f4212e;  /* A 型 = 赤 */
+    --color-b: #f4d03f;  /* B 型 = 黄 (やや暗めの黄) */
+    --color-o: #1d9bf0;  /* O 型 = 青 */
+    --color-ab: #b388eb; /* AB 型 = 紫 */
+    --rank-gold: #ffd700;
+    --rank-silver: #c0c0c0;
+    --rank-bronze: #cd7f32;
+    --rank-none: #555;
+  }
+  * { box-sizing: border-box; margin: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { overflow-x: hidden; max-width: 100%; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "Hiragino Sans", "Noto Sans JP", "Segoe UI", Meiryo, sans-serif;
+    padding: 12px 12px 80px;
+    min-height: 100vh;
+  }
+
+  /* ─── Toolbar ─────────────────────────────────────────────── */
+  .toolbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 12px; margin-bottom: 16px;
+    border: 1px solid var(--border); border-radius: 16px;
+    background: var(--panel);
+  }
+  .toolbar .title { font-size: 16px; font-weight: 700; margin-right: auto; }
+  .toolbar button {
+    background: none; border: 1px solid var(--border); color: var(--text);
+    border-radius: 999px; padding: 6px 14px; font-size: 13px; cursor: pointer;
+  }
+  .toolbar button:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ─── Day navigation ──────────────────────────────────────── */
+  .day-nav {
+    display: flex; align-items: center; gap: 16px; justify-content: center;
+    padding: 12px; margin-bottom: 16px;
+    border: 1px solid var(--border); border-radius: 16px;
+    background: var(--panel);
+  }
+  .day-nav button {
+    background: none; border: 1px solid var(--border); color: var(--text);
+    border-radius: 999px; padding: 8px 16px; font-size: 14px; cursor: pointer;
+  }
+  .day-nav .current-day { font-size: 18px; font-weight: 700; min-width: 160px; text-align: center; }
+  .day-nav .stock-info { font-size: 12px; color: var(--sub); margin-left: 12px; }
+
+  /* ─── 共通ランキングパネル (本日の総合運) ────────────────── */
+  .rank-panel {
+    margin-bottom: 12px;
+    padding: 18px 20px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+  }
+  .rp-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 14px;
+  }
+  .rp-title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sub);
+  }
+  .rp-date {
+    font-size: 11px;
+    color: #4a4a4a;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+  .rp-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .rp-cell {
+    text-align: center;
+    padding: 12px 8px;
+    background: rgba(255,255,255,0.015);
+    border: 1px solid #161616;
+    border-radius: 10px;
+    position: relative;
+  }
+  .rp-cell.top {
+    background: rgba(255, 215, 0, 0.04);
+    border-color: rgba(255, 215, 0, 0.18);
+  }
+  .rp-pos {
+    font-size: 10px;
+    color: var(--sub);
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+    font-family: ui-monospace, monospace;
+  }
+  .rp-blood {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-bottom: 4px;
+  }
+  .rp-blood.a { color: var(--color-a); }
+  .rp-blood.b { color: var(--color-b); }
+  .rp-blood.o { color: var(--color-o); }
+  .rp-blood.ab { color: var(--color-ab); }
+  .rp-stars {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--text);
+  }
+
+  /* ─── 4 column grid ───────────────────────────────────────── */
+  .columns {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  /* ─── Card per blood type ─────────────────────────────────── */
+  .card {
+    border: 1px solid var(--border); border-radius: 16px;
+    background: var(--card); overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .card.blood-a { border-top: 3px solid var(--color-a); }
+  .card.blood-b { border-top: 3px solid var(--color-b); }
+  .card.blood-o { border-top: 3px solid var(--color-o); }
+  .card.blood-ab { border-top: 3px solid var(--color-ab); }
+
+  .card-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px; border-bottom: 1px solid var(--border);
+  }
+  .avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+  }
+  .blood-a .avatar { background: var(--color-a); }
+  .blood-b .avatar { background: var(--color-b); color: #333; }
+  .blood-o .avatar { background: var(--color-o); }
+  .blood-ab .avatar { background: var(--color-ab); }
+  .account {
+    flex: 1; min-width: 0;
+    font-size: 13px; font-weight: 700; line-height: 1.3;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .account .handle {
+    display: block; font-size: 11px; color: var(--sub); font-weight: 400;
+  }
+  .rank-badge {
+    font-size: 18px; font-weight: 800;
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .rank-1 { background: var(--rank-gold); color: #000; }
+  .rank-2 { background: var(--rank-silver); color: #000; }
+  .rank-3 { background: var(--rank-bronze); color: #000; }
+  .rank-4 { background: var(--rank-none); color: #fff; font-size: 14px; }
+
+  .card-body { padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+
+  /* ─── Stars (4-axis) ──────────────────────────────────────── */
+  .stars-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px;
+  }
+  .stars-row .label { color: var(--sub); width: 48px; flex-shrink: 0; }
+  .stars-row .stars { font-size: 14px; letter-spacing: 1px; }
+  .stars-row.overall {
+    font-weight: 700; padding-bottom: 4px; border-bottom: 1px dashed var(--border);
+  }
+  .stars-row.overall .rank-text {
+    margin-left: auto; font-size: 12px; color: var(--accent);
+  }
+
+  /* ─── Label + one-liner ───────────────────────────────────── */
+  .label-line {
+    font-size: 14px; font-weight: 700; padding: 6px 0;
+    border-top: 1px solid var(--border); margin-top: 4px;
+  }
+  .one-liner {
+    font-size: 14px; line-height: 1.7; white-space: pre-wrap;
+    padding: 8px 10px; border-radius: 8px;
+    border: 1px solid transparent;
+    cursor: text;
+    flex: 1;
+    min-height: 110px;
+  }
+  .one-liner[contenteditable]:hover { border-color: var(--border); }
+  .one-liner[contenteditable]:focus {
+    border-color: var(--accent); background: rgba(29,155,240,.05); outline: none;
+  }
+
+  /* ─── Footer (buttons + status) ───────────────────────────── */
+  .card-footer {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 12px; border-top: 1px solid var(--border);
+    background: var(--panel);
+  }
+  .card-footer .meta {
+    font-size: 11px; color: var(--sub); font-family: ui-monospace, Consolas, monospace;
+    flex: 1; min-width: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .btn-mini {
+    background: none; border: 1px solid var(--border); color: var(--text);
+    border-radius: 999px; padding: 5px 10px; font-size: 11px; cursor: pointer;
+  }
+  .btn-mini:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-mini.ng { border-color: var(--ng); color: var(--ng); }
+  .btn-mini.ng:hover { background: var(--ng); color: #fff; }
+  .btn-mini.save { border-color: var(--accent); color: var(--accent); }
+  .btn-mini.save.dirty { background: var(--accent); color: #fff; font-weight: 700; }
+
+  /* ─── Bottom info bar ─────────────────────────────────────── */
+  .infobar {
+    margin-top: 24px; padding: 14px 18px;
+    border: 1px solid var(--border); border-radius: 16px;
+    background: var(--panel);
+    font-size: 13px; line-height: 1.8; color: var(--sub);
+  }
+  .infobar b { color: var(--text); font-weight: 700; }
+  .infobar .row { display: flex; gap: 16px; flex-wrap: wrap; }
+
+  /* ─── Stats: refined data-viz block (Tufte-leaning) ───────────
+     原則: 単一 hue + opacity grade で順位を表現、装飾なし、tabular figures、
+     hairline 区切り、generous spacing、装飾アイコンゼロ ─────────────── */
+
+  .stats {
+    margin-top: 40px;
+    padding: 36px 40px;
+    background: var(--panel);
+    border: 1px solid #1a1a1a;
+    border-radius: 24px;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+  .stats-block + .stats-block {
+    margin-top: 40px;
+    padding-top: 40px;
+    border-top: 1px solid #1a1a1a;
+  }
+  .stats-block > header { margin-bottom: 28px; }
+  .stats-block > header h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.02em;
+    margin-bottom: 6px;
+  }
+  .stats-block > header p {
+    font-size: 11px;
+    line-height: 1.6;
+    color: #6a6a6a;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+  }
+
+  /* ── Section 1: 順位バランス (distribution) ───────────────── */
+  .dist { display: flex; flex-direction: column; }
+  .dist-row {
+    display: grid;
+    grid-template-columns: 56px 1fr 44px 72px;
+    gap: 24px;
+    align-items: center;
+    padding: 16px 0;
+    border-top: 1px solid #161616;
+  }
+  .dist-row:first-child { border-top: none; padding-top: 4px; }
+  .dist-label {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: #9c9c9c;
+  }
+  .dist-label.a { color: var(--color-a); }
+  .dist-label.b { color: var(--color-b); }
+  .dist-label.o { color: var(--color-o); }
+  .dist-label.ab { color: var(--color-ab); }
+
+  .dist-bar {
+    display: flex;
+    height: 8px;
+    border-radius: 2px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .dist-seg { transition: opacity 200ms ease; }
+  .dist-seg:nth-child(1) { opacity: 1; }
+  .dist-seg:nth-child(2) { opacity: 0.62; }
+  .dist-seg:nth-child(3) { opacity: 0.34; }
+  .dist-seg:nth-child(4) { opacity: 0.18; }
+  .dist-row.a .dist-seg { background: var(--color-a); }
+  .dist-row.b .dist-seg { background: var(--color-b); }
+  .dist-row.o .dist-seg { background: var(--color-o); }
+  .dist-row.ab .dist-seg { background: var(--color-ab); }
+
+  .dist-avg {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    text-align: right;
+    letter-spacing: 0.02em;
+  }
+  .dist-status {
+    font-size: 10px;
+    color: #6a6a6a;
+    letter-spacing: 0.08em;
+    text-align: right;
+    text-transform: uppercase;
+  }
+  .dist-status.warn { color: #c8a64a; }
+
+  .dist-legend {
+    display: flex;
+    gap: 28px;
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid #161616;
+    font-size: 10px;
+    color: #6a6a6a;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .legend-key { display: flex; align-items: center; gap: 8px; }
+  .legend-swatch {
+    width: 18px;
+    height: 4px;
+    border-radius: 1px;
+    background: #d0d0d0;
+  }
+
+  /* ── Section 2: 推移 multi-line chart (4 blood overlaid) ──── */
+  .trend-chart {
+    width: 100%;
+    height: 220px;
+    display: block;
+  }
+  .trend-chart .grid {
+    stroke: #1a1a1a;
+    stroke-width: 1;
+  }
+  .trend-chart .today-line {
+    stroke: var(--accent);
+    stroke-width: 1;
+    opacity: 0.28;
+    stroke-dasharray: 2 3;
+  }
+  .trend-chart .trail {
+    fill: none;
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    transition: opacity 200ms;
+  }
+  .trend-chart circle {
+    stroke: var(--panel);
+    stroke-width: 1.5;
+  }
+  .trend-chart .dot-today {
+    stroke-width: 2.5;
+  }
+  .trend-chart .ylabel {
+    fill: #555;
+    font-size: 10px;
+    font-family: ui-monospace, monospace;
+    text-anchor: end;
+    dominant-baseline: middle;
+  }
+  .trend-chart .xlabel {
+    fill: #555;
+    font-size: 10px;
+    text-anchor: middle;
+    letter-spacing: 0.04em;
+  }
+  .trend-chart .xlabel.today {
+    fill: var(--text);
+    font-weight: 500;
+  }
+  .trend-chart .line-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    dominant-baseline: middle;
+    text-anchor: start;
+  }
+
+  /* ── Section 3: 4 軸 7 日平均 (axes table) ────────────────── */
+  .axes {
+    display: grid;
+    grid-template-columns: 56px repeat(4, 1fr);
+    gap: 0;
+  }
+  .axes-h {
+    font-size: 10px;
+    color: #555;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0 0 14px;
+    text-align: center;
+  }
+  .axes-h:first-child { text-align: left; }
+  .axes-cell {
+    padding: 14px 0;
+    font-size: 14px;
+    text-align: center;
+    color: var(--text);
+    border-top: 1px solid #161616;
+    letter-spacing: 0.02em;
+  }
+  .axes-cell.name {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-align: left;
+  }
+  .axes-cell.name.a { color: var(--color-a); }
+  .axes-cell.name.b { color: var(--color-b); }
+  .axes-cell.name.o { color: var(--color-o); }
+  .axes-cell.name.ab { color: var(--color-ab); }
+  .axes-cell .delta {
+    display: inline-block;
+    margin-left: 4px;
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    color: #4a4a4a;
+    font-weight: 500;
+    vertical-align: 2px;
+  }
+  .axes-cell .delta.up { color: #4a8a6a; }
+  .axes-cell .delta.down { color: #8a5a5a; }
+
+  /* ─── Mobile (< 900px) — switch to single column ──────────── */
+  @media (max-width: 900px) {
+    .columns { grid-template-columns: 1fr; }
+    .day-nav .stock-info { display: none; }
+    body { padding: 8px 8px 80px; }
+    .stats-grid {
+      grid-template-columns: 44px repeat(4, 1fr) 50px;
+      font-size: 11px;
+    }
+    .stats-grid .alert { display: none; }  /* mobile では alert を hide */
+    .heatmap-grid { font-size: 10px; }
+    .heatmap-grid .h-cell { height: 28px; font-size: 14px; }
+  }
+
+  /* ─── Blood type tabs (mobile only) ───────────────────────── */
+  .blood-tabs {
+    display: none;
+    gap: 6px; margin-bottom: 12px;
+    padding: 6px; background: var(--panel);
+    border: 1px solid var(--border); border-radius: 16px;
+  }
+  @media (max-width: 900px) {
+    .blood-tabs { display: flex; }
+    .columns .card { display: none; }
+    .columns .card.active { display: flex; }
+  }
+  .blood-tab {
+    flex: 1; padding: 8px; text-align: center;
+    border-radius: 12px; cursor: pointer; font-size: 13px; font-weight: 700;
+    background: transparent; border: 2px solid transparent; color: var(--sub);
+  }
+  .blood-tab.active.tab-a { background: var(--color-a); color: #fff; }
+  .blood-tab.active.tab-b { background: var(--color-b); color: #000; }
+  .blood-tab.active.tab-o { background: var(--color-o); color: #fff; }
+  .blood-tab.active.tab-ab { background: var(--color-ab); color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- ─── Toolbar ─────────────────────────────────────────────── -->
+<div class="toolbar">
+  <span class="title">血液型 まいにち占い 編集室 (mockup)</span>
+  <button onclick="alert('レビューモード\n(別画面、未実装)')">レビュー</button>
+  <button onclick="alert('NG 一覧\n(別画面、未実装)')">NG一覧 0</button>
+  <button onclick="alert('テーマ切替')">🌗</button>
+</div>
+
+<!-- ─── Day navigation ──────────────────────────────────────── -->
+<div class="day-nav">
+  <button onclick="prevDay()">← 前日</button>
+  <div class="current-day" id="current-day">2026-06-30 (火)</div>
+  <button onclick="nextDay()">翌日 →</button>
+  <span class="stock-info">在庫: 7 日分 (6/30 〜 7/6)</span>
+</div>
+
+<!-- ─── 本日の総合運ランキング (4 アカ共通、各 X 投稿にもこの section が入る) -->
+<div class="rank-panel">
+  <div class="rp-header">
+    <span class="rp-title">本日の総合運ランキング</span>
+    <span class="rp-date">2026 / 06 / 30 (火)</span>
+  </div>
+  <div class="rp-grid">
+    <div class="rp-cell top">
+      <div class="rp-pos">1位</div>
+      <div class="rp-blood b">B 型</div>
+      <div class="rp-stars">★★★★★</div>
+    </div>
+    <div class="rp-cell">
+      <div class="rp-pos">2位</div>
+      <div class="rp-blood a">A 型</div>
+      <div class="rp-stars">★★★★☆</div>
+    </div>
+    <div class="rp-cell">
+      <div class="rp-pos">3位</div>
+      <div class="rp-blood o">O 型</div>
+      <div class="rp-stars">★★★☆☆</div>
+    </div>
+    <div class="rp-cell">
+      <div class="rp-pos">4位</div>
+      <div class="rp-blood ab">AB 型</div>
+      <div class="rp-stars">★★★☆☆</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Blood type tabs (mobile only) ───────────────────────── -->
+<div class="blood-tabs">
+  <button class="blood-tab tab-a active" onclick="switchTab('a')">🔴 A</button>
+  <button class="blood-tab tab-b" onclick="switchTab('b')">🟡 B</button>
+  <button class="blood-tab tab-o" onclick="switchTab('o')">🔵 O</button>
+  <button class="blood-tab tab-ab" onclick="switchTab('ab')">🟣 AB</button>
+</div>
+
+<!-- ─── 4 column cards ──────────────────────────────────────── -->
+<div class="columns" id="columns">
+
+  <!-- A 型 -->
+  <div class="card blood-a active" data-blood="a">
+    <div class="card-header">
+      <div class="avatar">A</div>
+      <div class="account">
+        A型 まいにち占い
+        <span class="handle">@TodayAtype</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="stars-row overall">
+        <span class="label">総合運</span>
+        <span class="stars">★★★★☆</span>
+      </div>
+      <div class="stars-row">
+        <span class="label">恋愛運</span>
+        <span class="stars">★★★☆☆</span>
+      </div>
+      <div class="stars-row">
+        <span class="label">仕事運</span>
+        <span class="stars">★★★★★</span>
+      </div>
+      <div class="stars-row">
+        <span class="label">金銭運</span>
+        <span class="stars">★★★☆☆</span>
+      </div>
+      <div class="label-line">本日は集中！🎯</div>
+      <div class="one-liner" contenteditable="true">本日は集中の日。細かい確認も大切ですが、流れに任せると進みやすい時間帯があります。視野を広めに持つと、午後に新しい気付きが訪れそうです。</div>
+    </div>
+    <div class="card-footer">
+      <span class="meta">bt-A-2026-06-30 / 07:00</span>
+      <button class="btn-mini save">保存</button>
+      <button class="btn-mini ng">NG</button>
+    </div>
+  </div>
+
+  <!-- B 型 -->
+  <div class="card blood-b" data-blood="b">
+    <div class="card-header">
+      <div class="avatar">B</div>
+      <div class="account">
+        B型 まいにち占い
+        <span class="handle">@TodayBtype</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="stars-row overall">
+        <span class="label">総合運</span>
+        <span class="stars">★★★★★</span>
+      </div>
+      <div class="stars-row">
+        <span class="label">恋愛運</span>
+        <span class="stars">★★★★☆</span>
+      </div>
+      <div class="stars-row">
+        <span class="label">仕事運</span>
+        <span class="stars">★★★★★</span>
+      </div>
+      <div class="stars-row">
+        <span class="label">金銭運</span>
+        <span class="stars">★★★★☆</span>
+      </div>
+      <div class="label-line">本日は行動的！🔥</div>
+      <div class="one-liner" contenteditable="true">気の向くまま動いて正解の一日。新しいひらめきが結果につながりやすく、思い切った決断が運気を後押しします。直感を信じて踏み出してみてください。</div>
+    </div>
+    <div class="card-footer">
+      <span class="meta">bt-B-2026-06-30 / 07:05</span>
+      <button class="btn-mini save">保存</button>
+      <button class="btn-mini ng">NG</button>
+    </div>
+  </div>
+
+  <!-- O 型 -->
+  <div class="card blood-o" data-blood="o">
+    <div class="card-header">
+      <div class="avatar">O</div>
+      <div class="account">
+        O型 まいにち占い
+        <span class="handle">@TodayOtype</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="stars-row overall">
+        <span class="label">総合運</span>
+        <span class="stars">★★★☆☆</span>
+      </div>
+      <div class="stars-row">
+        <span class="label">恋愛運</span>
+        <span class="stars">★★★☆☆</span>
+      </div>
+      <div class="stars-row">
+        <span class="label">仕事運</span>
+        <span class="stars">★★★☆☆</span>
+      </div>
+      <div class="stars-row">
+        <span class="label">金銭運</span>
+        <span class="stars">★★★★☆</span>
+      </div>
+      <div class="label-line">本日は穏やか！🌿</div>
+      <div class="one-liner" contenteditable="true">焦らずマイペースで進むのが吉。大きな変化はないものの、小さなお金の動きに気付きがあります。穏やかな時間を大切にする一日です。</div>
+    </div>
+    <div class="card-footer">
+      <span class="meta">bt-O-2026-06-30 / 07:10</span>
+      <button class="btn-mini save">保存</button>
+      <button class="btn-mini ng">NG</button>
+    </div>
+  </div>
+
+  <!-- AB 型 -->
+  <div class="card blood-ab" data-blood="ab">
+    <div class="card-header">
+      <div class="avatar">AB</div>
+      <div class="account">
+        AB型 まいにち占い
+        <span class="handle">@TodayAbtype</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="stars-row overall">
+        <span class="label">総合運</span>
+        <span class="stars">★★★☆☆</span>
+      </div>
+      <div class="stars-row">
+        <span class="label">恋愛運</span>
+        <span class="stars">★★★★☆</span>
+      </div>
+      <div class="stars-row">
+        <span class="label">仕事運</span>
+        <span class="stars">★★★☆☆</span>
+      </div>
+      <div class="stars-row">
+        <span class="label">金銭運</span>
+        <span class="stars">★★★☆☆</span>
+      </div>
+      <div class="label-line">本日は内省！🌙</div>
+      <div class="one-liner" contenteditable="true">自分のリズムを大事にする一日。普段見落としているものに気付きやすく、内省が深まります。周りに合わせすぎず、独自の視点を信じて。</div>
+    </div>
+    <div class="card-footer">
+      <span class="meta">bt-AB-2026-06-30 / 07:15</span>
+      <button class="btn-mini save">保存</button>
+      <button class="btn-mini ng">NG</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ─── Stats panel ─────────────────────────────────────────── -->
+<section class="stats">
+
+  <!-- Section 1: 順位バランス -->
+  <div class="stats-block">
+    <header>
+      <h3>順位バランス</h3>
+      <p>7 日間で各血液型が取った順位の分布。理想平均 2.5。</p>
+    </header>
+
+    <div class="dist">
+      <div class="dist-row a">
+        <span class="dist-label">A 型</span>
+        <div class="dist-bar">
+          <span class="dist-seg" style="flex: 2"></span>
+          <span class="dist-seg" style="flex: 3"></span>
+          <span class="dist-seg" style="flex: 1"></span>
+          <span class="dist-seg" style="flex: 1"></span>
+        </div>
+        <span class="dist-avg">2.3</span>
+        <span class="dist-status">均等</span>
+      </div>
+
+      <div class="dist-row b">
+        <span class="dist-label">B 型</span>
+        <div class="dist-bar">
+          <span class="dist-seg" style="flex: 3"></span>
+          <span class="dist-seg" style="flex: 2"></span>
+          <span class="dist-seg" style="flex: 2"></span>
+          <span class="dist-seg" style="flex: 0"></span>
+        </div>
+        <span class="dist-avg">1.9</span>
+        <span class="dist-status warn">上位偏り</span>
+      </div>
+
+      <div class="dist-row o">
+        <span class="dist-label">O 型</span>
+        <div class="dist-bar">
+          <span class="dist-seg" style="flex: 1"></span>
+          <span class="dist-seg" style="flex: 1"></span>
+          <span class="dist-seg" style="flex: 3"></span>
+          <span class="dist-seg" style="flex: 2"></span>
+        </div>
+        <span class="dist-avg">2.9</span>
+        <span class="dist-status">中位寄り</span>
+      </div>
+
+      <div class="dist-row ab">
+        <span class="dist-label">AB 型</span>
+        <div class="dist-bar">
+          <span class="dist-seg" style="flex: 1"></span>
+          <span class="dist-seg" style="flex: 1"></span>
+          <span class="dist-seg" style="flex: 1"></span>
+          <span class="dist-seg" style="flex: 4"></span>
+        </div>
+        <span class="dist-avg">3.1</span>
+        <span class="dist-status warn">下位偏り</span>
+      </div>
+    </div>
+
+    <div class="dist-legend">
+      <span class="legend-key"><i class="legend-swatch" style="opacity: 1"></i>1位</span>
+      <span class="legend-key"><i class="legend-swatch" style="opacity: 0.62"></i>2位</span>
+      <span class="legend-key"><i class="legend-swatch" style="opacity: 0.34"></i>3位</span>
+      <span class="legend-key"><i class="legend-swatch" style="opacity: 0.18"></i>4位</span>
+    </div>
+  </div>
+
+  <!-- Section 2: 7 日間の推移 (4 blood overlaid) -->
+  <div class="stats-block">
+    <header>
+      <h3>7 日間の推移</h3>
+      <p>4 血液型を同一グラフに重ねて比較。上 = 1 位、下 = 4 位。今日 (6/30) は破線で表示。</p>
+    </header>
+
+    <svg class="trend-chart" viewBox="0 0 720 200" preserveAspectRatio="xMidYMid meet">
+      <!-- Grid lines at rank positions -->
+      <line class="grid" x1="30" y1="20"  x2="650" y2="20"/>
+      <line class="grid" x1="30" y1="70"  x2="650" y2="70"/>
+      <line class="grid" x1="30" y1="120" x2="650" y2="120"/>
+      <line class="grid" x1="30" y1="170" x2="650" y2="170"/>
+
+      <!-- Today vertical marker -->
+      <line class="today-line" x1="40" y1="15" x2="40" y2="175"/>
+
+      <!-- Y axis (rank 1-4) -->
+      <text class="ylabel" x="22" y="20">1</text>
+      <text class="ylabel" x="22" y="70">2</text>
+      <text class="ylabel" x="22" y="120">3</text>
+      <text class="ylabel" x="22" y="170">4</text>
+
+      <!-- A 型: ranks 2,3,1,2,4,1,3 → y 70,120,20,70,170,20,120 -->
+      <polyline class="trail" stroke="var(--color-a)"
+                points="40,70 140,120 240,20 340,70 440,170 540,20 640,120"/>
+      <circle class="dot-today" cx="40"  cy="70"  r="4.5" fill="var(--color-a)"/>
+      <circle cx="140" cy="120" r="3" fill="var(--color-a)"/>
+      <circle cx="240" cy="20"  r="3" fill="var(--color-a)"/>
+      <circle cx="340" cy="70"  r="3" fill="var(--color-a)"/>
+      <circle cx="440" cy="170" r="3" fill="var(--color-a)"/>
+      <circle cx="540" cy="20"  r="3" fill="var(--color-a)"/>
+      <circle cx="640" cy="120" r="3" fill="var(--color-a)"/>
+      <text class="line-label" x="658" y="120" fill="var(--color-a)">A</text>
+
+      <!-- B 型: ranks 1,2,3,1,2,3,1 → y 20,70,120,20,70,120,20 -->
+      <polyline class="trail" stroke="var(--color-b)"
+                points="40,20 140,70 240,120 340,20 440,70 540,120 640,20"/>
+      <circle class="dot-today" cx="40"  cy="20"  r="4.5" fill="var(--color-b)"/>
+      <circle cx="140" cy="70"  r="3" fill="var(--color-b)"/>
+      <circle cx="240" cy="120" r="3" fill="var(--color-b)"/>
+      <circle cx="340" cy="20"  r="3" fill="var(--color-b)"/>
+      <circle cx="440" cy="70"  r="3" fill="var(--color-b)"/>
+      <circle cx="540" cy="120" r="3" fill="var(--color-b)"/>
+      <circle cx="640" cy="20"  r="3" fill="var(--color-b)"/>
+      <text class="line-label" x="658" y="20" fill="var(--color-b)">B</text>
+
+      <!-- O 型: ranks 3,1,4,3,3,2,4 → y 120,20,170,120,120,70,170 -->
+      <polyline class="trail" stroke="var(--color-o)"
+                points="40,120 140,20 240,170 340,120 440,120 540,70 640,170"/>
+      <circle class="dot-today" cx="40"  cy="120" r="4.5" fill="var(--color-o)"/>
+      <circle cx="140" cy="20"  r="3" fill="var(--color-o)"/>
+      <circle cx="240" cy="170" r="3" fill="var(--color-o)"/>
+      <circle cx="340" cy="120" r="3" fill="var(--color-o)"/>
+      <circle cx="440" cy="120" r="3" fill="var(--color-o)"/>
+      <circle cx="540" cy="70"  r="3" fill="var(--color-o)"/>
+      <circle cx="640" cy="170" r="3" fill="var(--color-o)"/>
+      <text class="line-label" x="658" y="170" fill="var(--color-o)">O</text>
+
+      <!-- AB 型: ranks 4,4,2,4,1,4,2 → y 170,170,70,170,20,170,70 -->
+      <polyline class="trail" stroke="var(--color-ab)"
+                points="40,170 140,170 240,70 340,170 440,20 540,170 640,70"/>
+      <circle class="dot-today" cx="40"  cy="170" r="4.5" fill="var(--color-ab)"/>
+      <circle cx="140" cy="170" r="3" fill="var(--color-ab)"/>
+      <circle cx="240" cy="70"  r="3" fill="var(--color-ab)"/>
+      <circle cx="340" cy="170" r="3" fill="var(--color-ab)"/>
+      <circle cx="440" cy="20"  r="3" fill="var(--color-ab)"/>
+      <circle cx="540" cy="170" r="3" fill="var(--color-ab)"/>
+      <circle cx="640" cy="70"  r="3" fill="var(--color-ab)"/>
+      <text class="line-label" x="658" y="70" fill="var(--color-ab)">AB</text>
+
+      <!-- X axis date labels -->
+      <text class="xlabel today" x="40"  y="192">6/30</text>
+      <text class="xlabel"       x="140" y="192">7/1</text>
+      <text class="xlabel"       x="240" y="192">7/2</text>
+      <text class="xlabel"       x="340" y="192">7/3</text>
+      <text class="xlabel"       x="440" y="192">7/4</text>
+      <text class="xlabel"       x="540" y="192">7/5</text>
+      <text class="xlabel"       x="640" y="192">7/6</text>
+    </svg>
+  </div>
+
+  <!-- Section 3: 4 軸 7 日平均 -->
+  <div class="stats-block">
+    <header>
+      <h3>運勢の傾向</h3>
+      <p>4 軸の 7 日平均。3.0 が中央値。</p>
+    </header>
+
+    <div class="axes">
+      <div class="axes-h"></div>
+      <div class="axes-h">総合</div>
+      <div class="axes-h">恋愛</div>
+      <div class="axes-h">仕事</div>
+      <div class="axes-h">金銭</div>
+
+      <div class="axes-cell name a">A 型</div>
+      <div class="axes-cell">3.4 <span class="delta up">+0.4</span></div>
+      <div class="axes-cell">3.1 <span class="delta up">+0.1</span></div>
+      <div class="axes-cell">3.7 <span class="delta up">+0.7</span></div>
+      <div class="axes-cell">3.0</div>
+
+      <div class="axes-cell name b">B 型</div>
+      <div class="axes-cell">3.8 <span class="delta up">+0.8</span></div>
+      <div class="axes-cell">3.4 <span class="delta up">+0.4</span></div>
+      <div class="axes-cell">3.6 <span class="delta up">+0.6</span></div>
+      <div class="axes-cell">3.3 <span class="delta up">+0.3</span></div>
+
+      <div class="axes-cell name o">O 型</div>
+      <div class="axes-cell">2.7 <span class="delta down">-0.3</span></div>
+      <div class="axes-cell">3.0</div>
+      <div class="axes-cell">2.9 <span class="delta down">-0.1</span></div>
+      <div class="axes-cell">3.4 <span class="delta up">+0.4</span></div>
+
+      <div class="axes-cell name ab">AB 型</div>
+      <div class="axes-cell">2.6 <span class="delta down">-0.4</span></div>
+      <div class="axes-cell">3.2 <span class="delta up">+0.2</span></div>
+      <div class="axes-cell">2.7 <span class="delta down">-0.3</span></div>
+      <div class="axes-cell">2.9 <span class="delta down">-0.1</span></div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ─── Bottom info bar ─────────────────────────────────────── -->
+<div class="infobar">
+  <div class="row">
+    <div><b>次の投稿:</b> 6/30 (火) 07:00 (@TodayAtype)</div>
+    <div><b>在庫:</b> 7 日分 (6/30 〜 7/6)</div>
+    <div><b>次バッチ生成:</b> 翌朝 04:00</div>
+    <div><b>未レビュー:</b> 0 / 28</div>
+  </div>
+</div>
+
+<script>
+  // mockup 動作: 日付ナビは visual のみ、save / NG は alert
+  let currentDate = new Date('2026-06-30');
+  function fmt(d) {
+    const wd = ['日','月','火','水','木','金','土'][d.getDay()];
+    return d.toISOString().slice(0, 10) + ` (${wd})`;
+  }
+  function prevDay() {
+    currentDate.setDate(currentDate.getDate() - 1);
+    document.getElementById('current-day').textContent = fmt(currentDate);
+  }
+  function nextDay() {
+    currentDate.setDate(currentDate.getDate() + 1);
+    document.getElementById('current-day').textContent = fmt(currentDate);
+  }
+
+  // モバイル用 tab 切替
+  function switchTab(blood) {
+    document.querySelectorAll('.blood-tab').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.tab-${blood}`).classList.add('active');
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+    document.querySelector(`.card[data-blood="${blood}"]`).classList.add('active');
+  }
+
+  // 編集検知 → save ボタン active 化
+  document.querySelectorAll('.one-liner[contenteditable]').forEach(el => {
+    el.addEventListener('input', () => {
+      const card = el.closest('.card');
+      const saveBtn = card.querySelector('.btn-mini.save');
+      saveBtn.classList.add('dirty');
+      saveBtn.textContent = '保存 *';
+    });
+  });
+
+  // save / NG ボタン (alert のみ、API 接続は本実装で)
+  document.querySelectorAll('.btn-mini.save').forEach(b => {
+    b.addEventListener('click', () => alert('保存処理\n(本実装で GitHub API commit)'));
+  });
+  document.querySelectorAll('.btn-mini.ng').forEach(b => {
+    b.addEventListener('click', () => {
+      if (confirm('この投稿を NG にしますか？\n(rejected へ移動、7 日間保持、復活可能)')) {
+        alert('NG 処理\n(本実装で rejected セクションに移動)');
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

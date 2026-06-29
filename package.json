@@ -1,0 +1,9 @@
+{
+  "name": "bloodtype-editor",
+  "private": true,
+  "type": "module",
+  "description": "blood-type-uranai 編集室 (4 アカ並列 X 占い content management)",
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  }
+}

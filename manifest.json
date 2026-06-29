@@ -1,0 +1,11 @@
+{
+  "name": "blood-type 編集室",
+  "short_name": "BT 編集室",
+  "display": "standalone",
+  "start_url": "/",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    { "src": "/avatar.png", "sizes": "any", "type": "image/png" }
+  ]
+}
