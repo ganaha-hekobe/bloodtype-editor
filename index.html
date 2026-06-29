@@ -458,6 +458,39 @@
     .heatmap-grid .h-cell { height: 28px; font-size: 14px; }
   }
 
+  /* ─── PIN gate ────────────────────────────────────────────── */
+  #pin-view {
+    display: flex; flex-direction: column; align-items: center;
+    padding-top: 18vh; text-align: center;
+  }
+  #pin-view .pin-logo {
+    width: 72px; height: 72px; border-radius: 18px;
+    background: linear-gradient(135deg, var(--color-a), var(--color-b), var(--color-o), var(--color-ab));
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 22px; letter-spacing: 0.04em;
+    margin-bottom: 18px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+  #pin-view h1 {
+    font-size: 16px; font-weight: 600; margin-bottom: 28px;
+    letter-spacing: 0.04em; color: var(--text);
+  }
+  #pin-input {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    color: var(--text); font-size: 22px; text-align: center; letter-spacing: 8px;
+    padding: 14px 18px; width: 220px; outline: none;
+    font-variant-numeric: tabular-nums;
+  }
+  #pin-input:focus { border-color: var(--accent); }
+  #pin-btn {
+    display: block; margin: 20px auto 0;
+    background: var(--accent); color: #fff; border: none; border-radius: 999px;
+    padding: 12px 36px; font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+  #pin-btn:disabled { opacity: 0.5; cursor: wait; }
+  #pin-error { color: var(--ng); font-size: 12px; margin-top: 14px; min-height: 16px; }
+  #app-view { display: none; }
+
   /* ─── Blood type tabs (mobile only) ───────────────────────── */
   .blood-tabs {
     display: none;
@@ -482,6 +515,18 @@
 </style>
 </head>
 <body>
+
+<!-- ─── PIN gate ────────────────────────────────────────────── -->
+<div id="pin-view">
+  <div class="pin-logo">BT</div>
+  <h1>blood-type 編集室</h1>
+  <input id="pin-input" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN">
+  <button id="pin-btn">ひらく</button>
+  <div id="pin-error"></div>
+</div>
+
+<!-- ─── App view (PIN 入力後表示) ───────────────────────────── -->
+<div id="app-view">
 
 <!-- ─── Toolbar ─────────────────────────────────────────────── -->
 <div class="toolbar">
@@ -881,58 +926,337 @@
 <!-- ─── Bottom info bar ─────────────────────────────────────── -->
 <div class="infobar">
   <div class="row">
-    <div><b>次の投稿:</b> 6/30 (火) 07:00 (@TodayAtype)</div>
-    <div><b>在庫:</b> 7 日分 (6/30 〜 7/6)</div>
-    <div><b>次バッチ生成:</b> 翌朝 04:00</div>
-    <div><b>未レビュー:</b> 0 / 28</div>
+    <div><b>次の投稿:</b> <span id="ib-next">—</span></div>
+    <div><b>在庫:</b> <span id="ib-stock">—</span></div>
+    <div><b>次バッチ生成:</b> 毎日 23:00 JST</div>
   </div>
 </div>
 
+</div><!-- end #app-view -->
+
 <script>
-  // mockup 動作: 日付ナビは visual のみ、save / NG は alert
-  let currentDate = new Date('2026-06-30');
-  function fmt(d) {
-    const wd = ['日','月','火','水','木','金','土'][d.getDay()];
-    return d.toISOString().slice(0, 10) + ` (${wd})`;
-  }
-  function prevDay() {
-    currentDate.setDate(currentDate.getDate() - 1);
-    document.getElementById('current-day').textContent = fmt(currentDate);
-  }
-  function nextDay() {
-    currentDate.setDate(currentDate.getDate() + 1);
-    document.getElementById('current-day').textContent = fmt(currentDate);
+(function() {
+  // ────── State ───────────────────────────────────────────
+  const BLOODS = ['a', 'b', 'o', 'ab'];
+  const WD = ['日','月','火','水','木','金','土'];
+  const state = { pin: '', data: null, currentDate: null };
+  const $ = (sel, ctx = document) => ctx.querySelector(sel);
+  const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
+
+  // ────── Date helpers ────────────────────────────────────
+  function fmt(d) { return d.toISOString().slice(0, 10) + ` (${WD[d.getDay()]})`; }
+  function dateStr(d) { return d.toISOString().slice(0, 10); }
+  function fmtDateSlash(d) { return `${d.getMonth() + 1}/${d.getDate()} (${WD[d.getDay()]})`; }
+
+  // ────── API ─────────────────────────────────────────────
+  async function fetchAPI(method, url, body) {
+    const opts = {
+      method,
+      headers: { 'x-pin': state.pin, 'Content-Type': 'application/json' },
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(url, opts);
+    if (res.status === 401) throw new Error('PIN が違います');
+    if (!res.ok) {
+      let err = `Error ${res.status}`;
+      try { const j = await res.json(); err = j.error || err; } catch {}
+      throw new Error(err);
+    }
+    return res.json();
   }
 
-  // モバイル用 tab 切替
-  function switchTab(blood) {
-    document.querySelectorAll('.blood-tab').forEach(b => b.classList.remove('active'));
-    document.querySelector(`.tab-${blood}`).classList.add('active');
-    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
-    document.querySelector(`.card[data-blood="${blood}"]`).classList.add('active');
+  // ────── Content parse / build ───────────────────────────
+  function parseContent(content) {
+    const lines = (content || '').split('\n');
+    const result = {
+      header: '',
+      stars: { overall: '★★★☆☆', love: '★★★☆☆', work: '★★★☆☆', money: '★★★☆☆' },
+      rankingTitle: '',
+      rankingLine: '',
+      body: '',
+    };
+    let i = 0;
+    while (i < lines.length && lines[i].trim() === '') i++;
+    if (i < lines.length) result.header = lines[i++];
+    for (; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.startsWith('総合運 ')) result.stars.overall = line.substring(4);
+      else if (line.startsWith('恋愛運 ')) result.stars.love = line.substring(4);
+      else if (line.startsWith('仕事運 ')) result.stars.work = line.substring(4);
+      else if (line.startsWith('金銭運 ')) result.stars.money = line.substring(4);
+      else if (line.startsWith('🏆')) {
+        result.rankingTitle = line;
+        if (i + 1 < lines.length) result.rankingLine = lines[++i];
+        i++;
+        break;
+      }
+    }
+    const bodyLines = [];
+    for (; i < lines.length; i++) {
+      if (lines[i].trim()) bodyLines.push(lines[i]);
+    }
+    result.body = bodyLines.join('\n');
+    return result;
   }
 
-  // 編集検知 → save ボタン active 化
-  document.querySelectorAll('.one-liner[contenteditable]').forEach(el => {
-    el.addEventListener('input', () => {
-      const card = el.closest('.card');
-      const saveBtn = card.querySelector('.btn-mini.save');
-      saveBtn.classList.add('dirty');
-      saveBtn.textContent = '保存 *';
-    });
-  });
+  function buildContent(parsed, newBody) {
+    return [
+      parsed.header,
+      '',
+      `総合運 ${parsed.stars.overall}`,
+      `恋愛運 ${parsed.stars.love}`,
+      `仕事運 ${parsed.stars.work}`,
+      `金銭運 ${parsed.stars.money}`,
+      '',
+      parsed.rankingTitle || '🏆 本日の総合運ランキング',
+      parsed.rankingLine,
+      '',
+      newBody,
+    ].join('\n');
+  }
 
-  // save / NG ボタン (alert のみ、API 接続は本実装で)
-  document.querySelectorAll('.btn-mini.save').forEach(b => {
-    b.addEventListener('click', () => alert('保存処理\n(本実装で GitHub API commit)'));
-  });
-  document.querySelectorAll('.btn-mini.ng').forEach(b => {
-    b.addEventListener('click', () => {
-      if (confirm('この投稿を NG にしますか？\n(rejected へ移動、7 日間保持、復活可能)')) {
-        alert('NG 処理\n(本実装で rejected セクションに移動)');
+  function findEntryForDate(blood, dStr) {
+    const queue = state.data[blood]?.queue || [];
+    return queue.find(p => String(p.scheduled_at || '').slice(0, 10) === dStr);
+  }
+
+  // ────── PIN ─────────────────────────────────────────────
+  async function handlePinSubmit() {
+    const pin = $('#pin-input').value.trim();
+    if (!pin) return;
+    state.pin = pin;
+    $('#pin-error').textContent = '';
+    const btn = $('#pin-btn');
+    btn.textContent = '読み込み中…';
+    btn.disabled = true;
+    try {
+      state.data = await fetchAPI('GET', '/api/load');
+      state.currentDate = pickInitialDate();
+      $('#pin-view').style.display = 'none';
+      $('#app-view').style.display = '';
+      renderAll();
+    } catch (err) {
+      state.pin = '';
+      $('#pin-error').textContent = err.message || 'PIN または接続エラー';
+    } finally {
+      btn.textContent = 'ひらく';
+      btn.disabled = false;
+    }
+  }
+
+  function pickInitialDate() {
+    const dates = [];
+    for (const b of BLOODS) {
+      for (const p of state.data[b]?.queue || []) {
+        const ds = String(p.scheduled_at || '').slice(0, 10);
+        if (ds) dates.push(ds);
+      }
+    }
+    if (dates.length) {
+      dates.sort();
+      return new Date(dates[0] + 'T00:00:00');
+    }
+    const t = new Date(); t.setHours(0, 0, 0, 0);
+    return t;
+  }
+
+  // ────── Render ──────────────────────────────────────────
+  function renderAll() {
+    $('#current-day').textContent = fmt(state.currentDate);
+    renderRankPanel();
+    renderCards();
+    renderInfoBar();
+  }
+
+  function renderRankPanel() {
+    const dStr = dateStr(state.currentDate);
+    $('.rp-date').textContent = fmt(state.currentDate);
+    const stars = {};
+    let rankingLine = '';
+    for (const b of BLOODS) {
+      const e = findEntryForDate(b, dStr);
+      if (e) {
+        const p = parseContent(e.content);
+        stars[b] = p.stars.overall;
+        if (!rankingLine && p.rankingLine) rankingLine = p.rankingLine;
+      }
+    }
+    if (!rankingLine) {
+      $$('.rp-cell').forEach(cell => {
+        $('.rp-stars', cell).textContent = '—';
+      });
+      return;
+    }
+    const segments = rankingLine.split(/\s{2,}/).map(s => s.trim()).filter(Boolean);
+    const cells = $$('.rp-cell');
+    segments.forEach((seg, idx) => {
+      if (idx >= cells.length) return;
+      const m = seg.match(/(.+?)\s+([ABO]+)型/);
+      const cell = cells[idx];
+      if (m) {
+        $('.rp-pos', cell).textContent = m[1].trim();
+        const bloodStr = m[2].toUpperCase();
+        $('.rp-blood', cell).textContent = `${bloodStr} 型`;
+        $('.rp-blood', cell).className = `rp-blood ${bloodStr.toLowerCase()}`;
+        $('.rp-stars', cell).textContent = stars[bloodStr.toLowerCase()] || '—';
+        if (idx === 0) cell.classList.add('top'); else cell.classList.remove('top');
       }
     });
+  }
+
+  function renderCards() {
+    const dStr = dateStr(state.currentDate);
+    for (const blood of BLOODS) {
+      const card = $(`.card[data-blood="${blood}"]`);
+      if (!card) continue;
+      const entry = findEntryForDate(blood, dStr);
+      if (!entry) {
+        card.style.opacity = '0.35';
+        $('.one-liner', card).textContent = '(この日のデータなし)';
+        $('.label-line', card).textContent = '';
+        card._entry = null;
+        card._parsed = null;
+        continue;
+      }
+      card.style.opacity = '1';
+      const parsed = parseContent(entry.content);
+      $('.stars-row.overall .stars', card).textContent = parsed.stars.overall;
+      const nonOverall = $$('.stars-row:not(.overall) .stars', card);
+      const keys = ['love', 'work', 'money'];
+      nonOverall.forEach((el, i) => { el.textContent = parsed.stars[keys[i]]; });
+      $('.one-liner', card).textContent = parsed.body;
+      $('.label-line', card).textContent = '';  // label は yaml に保持していない
+      $('.card-footer .meta', card).textContent =
+        `${entry.id} / ${(entry.scheduled_at || '').slice(11, 16)}`;
+      card._entry = entry;
+      card._parsed = parsed;
+      card._dirty = false;
+      const saveBtn = $('.btn-mini.save', card);
+      saveBtn.classList.remove('dirty');
+      saveBtn.textContent = '保存';
+    }
+  }
+
+  function renderInfoBar() {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    let stockDays = 0;
+    for (let i = 0; i < 60; i++) {
+      const d = new Date(today); d.setDate(d.getDate() + i);
+      const dStr = dateStr(d);
+      const allHave = BLOODS.every(b => findEntryForDate(b, dStr));
+      if (allHave) stockDays++;
+      else if (i > 0) break;
+    }
+    // 次の投稿 = 全 queue 中で最も早い scheduled_at
+    let next = null;
+    for (const b of BLOODS) {
+      for (const p of state.data[b]?.queue || []) {
+        if (!next || (p.scheduled_at || '') < (next.scheduled_at || '')) {
+          next = { ...p, blood: b };
+        }
+      }
+    }
+    const nextStr = next
+      ? `${(next.scheduled_at || '').slice(5, 16)} (@Today${next.blood.toUpperCase()}type)`
+      : '(なし)';
+    $('#ib-next').textContent = nextStr;
+    $('#ib-stock').textContent = `${stockDays} 日分`;
+  }
+
+  // ────── Day navigation ──────────────────────────────────
+  window.prevDay = function () {
+    state.currentDate.setDate(state.currentDate.getDate() - 1);
+    renderAll();
+  };
+  window.nextDay = function () {
+    state.currentDate.setDate(state.currentDate.getDate() + 1);
+    renderAll();
+  };
+
+  window.switchTab = function (blood) {
+    $$('.blood-tab').forEach(b => b.classList.remove('active'));
+    $(`.tab-${blood}`).classList.add('active');
+    $$('.card').forEach(c => c.classList.remove('active'));
+    $(`.card[data-blood="${blood}"]`).classList.add('active');
+  };
+
+  // ────── Edit / Save / NG ────────────────────────────────
+  function attachListeners() {
+    $$('.one-liner[contenteditable]').forEach(el => {
+      el.addEventListener('input', () => {
+        const card = el.closest('.card');
+        if (!card._entry) return;
+        card._dirty = true;
+        const saveBtn = $('.btn-mini.save', card);
+        saveBtn.classList.add('dirty');
+        saveBtn.textContent = '保存 *';
+      });
+    });
+    $$('.btn-mini.save').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const card = btn.closest('.card');
+        if (!card._entry || !card._parsed) return;
+        const blood = card.dataset.blood;
+        const newBody = $('.one-liner', card).textContent.trim();
+        if (!newBody) return alert('本文が空です');
+        const newContent = buildContent(card._parsed, newBody);
+        btn.textContent = '保存中…';
+        btn.disabled = true;
+        try {
+          const result = await fetchAPI('POST', '/api/save', {
+            [blood]: { id: card._entry.id, content: newContent },
+          });
+          if (result.errors && result.errors.length) {
+            throw new Error(result.errors[0].error);
+          }
+          card._entry.content = newContent;
+          card._parsed = parseContent(newContent);
+          card._dirty = false;
+          btn.classList.remove('dirty');
+          btn.textContent = '保存済 ✓';
+          setTimeout(() => { btn.textContent = '保存'; }, 1500);
+        } catch (err) {
+          alert(`保存失敗: ${err.message || err}`);
+          btn.textContent = '保存 *';
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    });
+    $$('.btn-mini.ng').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const card = btn.closest('.card');
+        if (!card._entry) return;
+        if (!confirm(`この投稿 (${card._entry.id}) を NG にしますか？\n(rejected へ移動、7 日間保持後に削除、復活可能)`)) return;
+        const blood = card.dataset.blood;
+        btn.disabled = true;
+        btn.textContent = '処理中…';
+        try {
+          await fetchAPI('POST', '/api/review', {
+            blood, id: card._entry.id, verdict: 'ng',
+          });
+          state.data = await fetchAPI('GET', '/api/load');
+          renderAll();
+        } catch (err) {
+          alert(`NG 処理失敗: ${err.message || err}`);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'NG';
+        }
+      });
+    });
+  }
+
+  // ────── Init ────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    $('#pin-btn').addEventListener('click', handlePinSubmit);
+    $('#pin-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') handlePinSubmit();
+    });
+    attachListeners();
+    setTimeout(() => $('#pin-input').focus(), 100);
   });
+})();
 </script>
 
 </body>
