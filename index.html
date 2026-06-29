@@ -541,7 +541,7 @@
 
 <!-- ─── Toolbar ─────────────────────────────────────────────── -->
 <div class="toolbar">
-  <span class="title">血液型 まいにち占い 編集室 (mockup)</span>
+  <span class="title">血液型 まいにち占い 編集室</span>
   <button onclick="alert('レビューモード\n(別画面、未実装)')">レビュー</button>
   <button onclick="alert('NG 一覧\n(別画面、未実装)')">NG一覧 0</button>
   <button onclick="alert('テーマ切替')">🌗</button>
@@ -954,9 +954,12 @@
   const $ = (sel, ctx = document) => ctx.querySelector(sel);
   const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
 
-  // ────── Date helpers ────────────────────────────────────
-  function fmt(d) { return d.toISOString().slice(0, 10) + ` (${WD[d.getDay()]})`; }
-  function dateStr(d) { return d.toISOString().slice(0, 10); }
+  // ────── Date helpers (★local time、UTC で日付がズレる bug 回避★) ──
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function dateStr(d) {
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+  function fmt(d) { return dateStr(d) + ` (${WD[d.getDay()]})`; }
   function fmtDateSlash(d) { return `${d.getMonth() + 1}/${d.getDate()} (${WD[d.getDay()]})`; }
 
   // ────── API ─────────────────────────────────────────────
