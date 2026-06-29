@@ -3,7 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>血液型 まいにち占い 編集室 (mockup)</title>
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='16' height='16' fill='%23f4212e'/%3E%3Crect x='16' width='16' height='16' fill='%23f4d03f'/%3E%3Crect y='16' width='16' height='16' fill='%231d9bf0'/%3E%3Crect x='16' y='16' width='16' height='16' fill='%23b388eb'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='90' height='90' fill='%23f4212e'/%3E%3Crect x='90' width='90' height='90' fill='%23f4d03f'/%3E%3Crect y='90' width='90' height='90' fill='%231d9bf0'/%3E%3Crect x='90' y='90' width='90' height='90' fill='%23b388eb'/%3E%3C/svg%3E">
+<title>血液型 まいにち占い 編集室</title>
 <style>
   :root {
     --bg: #000; --card: #16181c; --panel: #101214; --border: #2f3336;
@@ -464,13 +468,23 @@
     padding-top: 18vh; text-align: center;
   }
   #pin-view .pin-logo {
-    width: 72px; height: 72px; border-radius: 18px;
-    background: linear-gradient(135deg, var(--color-a), var(--color-b), var(--color-o), var(--color-ab));
-    display: flex; align-items: center; justify-content: center;
-    color: #fff; font-weight: 800; font-size: 22px; letter-spacing: 0.04em;
+    width: 88px; height: 88px; border-radius: 18px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
     margin-bottom: 18px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
   }
+  #pin-view .pin-logo .q {
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 22px; letter-spacing: 0.02em;
+    font-family: "Helvetica Neue", "Hiragino Sans", system-ui, sans-serif;
+  }
+  #pin-view .pin-logo .q-a { background: var(--color-a); }
+  #pin-view .pin-logo .q-b { background: var(--color-b); color: #1a1a1a; }
+  #pin-view .pin-logo .q-o { background: var(--color-o); }
+  #pin-view .pin-logo .q-ab { background: var(--color-ab); font-size: 17px; }
   #pin-view h1 {
     font-size: 16px; font-weight: 600; margin-bottom: 28px;
     letter-spacing: 0.04em; color: var(--text);
@@ -518,8 +532,13 @@
 
 <!-- ─── PIN gate ────────────────────────────────────────────── -->
 <div id="pin-view">
-  <div class="pin-logo">BT</div>
-  <h1>blood-type 編集室</h1>
+  <div class="pin-logo">
+    <span class="q q-a">A</span>
+    <span class="q q-b">B</span>
+    <span class="q q-o">O</span>
+    <span class="q q-ab">AB</span>
+  </div>
+  <h1>血液型 まいにち占い 編集室</h1>
   <input id="pin-input" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN">
   <button id="pin-btn">ひらく</button>
   <div id="pin-error"></div>
