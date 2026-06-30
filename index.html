@@ -229,6 +229,95 @@
   .btn-mini.ng:hover { background: var(--ng); color: #fff; }
   .btn-mini.save { border-color: var(--accent); color: var(--accent); }
   .btn-mini.save.dirty { background: var(--accent); color: #fff; font-weight: 700; }
+  .btn-mini.copy { border-color: var(--ok); color: var(--ok); font-weight: 600; }
+  .btn-mini.copy:hover { background: var(--ok); color: #000; }
+  .btn-mini.copy.copied { background: var(--ok); color: #000; }
+  .btn-mini.reserved { border-color: #c8a64a; color: #c8a64a; }
+  .btn-mini.reserved:hover { background: #c8a64a; color: #000; }
+  .btn-mini.unreserve { border-color: var(--sub); color: var(--sub); }
+  .btn-mini.unreserve:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ─── View toggle ─────────────────────────────────────────── */
+  .view-toggle {
+    display: inline-flex; gap: 0;
+    border: 1px solid var(--border); border-radius: 999px; overflow: hidden;
+  }
+  .view-toggle button {
+    background: none; border: none; color: var(--sub);
+    padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
+    border-radius: 0;
+  }
+  .view-toggle button.active { background: var(--accent); color: #fff; }
+
+  /* ─── Account view (1 アカ × 7 日縦並び) ──────────────────── */
+  .account-view { display: none; }
+  .account-view.active { display: block; }
+  .account-tabs {
+    display: flex; gap: 6px; margin-bottom: 16px;
+    padding: 6px; background: var(--panel);
+    border: 1px solid var(--border); border-radius: 16px;
+  }
+  .account-tab {
+    flex: 1; padding: 10px; text-align: center;
+    border-radius: 12px; cursor: pointer; font-size: 13px; font-weight: 700;
+    background: transparent; border: 2px solid transparent; color: var(--sub);
+  }
+  .account-tab.active.tab-a { background: var(--color-a); color: #fff; }
+  .account-tab.active.tab-b { background: var(--color-b); color: #000; }
+  .account-tab.active.tab-o { background: var(--color-o); color: #fff; }
+  .account-tab.active.tab-ab { background: var(--color-ab); color: #fff; }
+
+  .acct-day-list { display: flex; flex-direction: column; gap: 12px; }
+  .acct-day-card {
+    border: 1px solid var(--border); border-radius: 16px;
+    background: var(--card); overflow: hidden;
+  }
+  .acct-day-card.blood-a { border-top: 3px solid var(--color-a); }
+  .acct-day-card.blood-b { border-top: 3px solid var(--color-b); }
+  .acct-day-card.blood-o { border-top: 3px solid var(--color-o); }
+  .acct-day-card.blood-ab { border-top: 3px solid var(--color-ab); }
+  .acct-day-card.reserved-done { opacity: 0.55; }
+  .acct-day-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    background: var(--panel);
+  }
+  .acct-day-header .date { font-size: 14px; font-weight: 700; }
+  .acct-day-header .wd { font-size: 12px; color: var(--sub); }
+  .acct-day-header .rank-mini {
+    margin-left: auto; font-size: 11px; color: var(--sub);
+    font-family: ui-monospace, monospace;
+  }
+  .acct-day-header .reserved-badge {
+    font-size: 10px; padding: 2px 8px; border-radius: 999px;
+    background: rgba(200, 166, 74, 0.15); color: #c8a64a; font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+  .acct-day-body {
+    padding: 12px 14px;
+    font-size: 13px; line-height: 1.7;
+    white-space: pre-wrap;
+    cursor: text;
+    border: 1px solid transparent;
+  }
+  .acct-day-body[contenteditable]:hover { border-color: var(--border); }
+  .acct-day-body[contenteditable]:focus {
+    border-color: var(--accent); background: rgba(29,155,240,.05); outline: none;
+  }
+  .acct-day-stars {
+    padding: 8px 14px; font-size: 11px; color: var(--sub);
+    border-top: 1px solid var(--border);
+    font-family: ui-monospace, monospace;
+    letter-spacing: 0.02em;
+  }
+  .acct-day-footer {
+    display: flex; gap: 6px; padding: 8px 14px;
+    border-top: 1px solid var(--border); background: var(--panel);
+  }
+  .acct-day-footer .meta {
+    font-size: 11px; color: var(--sub); font-family: ui-monospace, monospace;
+    flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
 
   /* ─── Bottom info bar ─────────────────────────────────────── */
   .infobar {
@@ -542,9 +631,11 @@
 <!-- ─── Toolbar ─────────────────────────────────────────────── -->
 <div class="toolbar">
   <span class="title">血液型 まいにち占い 編集室</span>
-  <button onclick="alert('レビューモード\n(別画面、未実装)')">レビュー</button>
-  <button onclick="alert('NG 一覧\n(別画面、未実装)')">NG一覧 0</button>
-  <button onclick="alert('テーマ切替')">🌗</button>
+  <div class="view-toggle">
+    <button id="view-day" class="active" onclick="switchView('day')">📅 日別</button>
+    <button id="view-account" onclick="switchView('account')">👤 アカ別</button>
+  </div>
+  <button id="show-archive-btn" onclick="alert('予約済一覧\n(未実装、archive を表示予定)')">予約済</button>
 </div>
 
 <!-- ─── Day navigation ──────────────────────────────────────── -->
@@ -593,7 +684,8 @@
   <button class="blood-tab tab-ab" onclick="switchTab('ab')">🟣 AB</button>
 </div>
 
-<!-- ─── 4 column cards ──────────────────────────────────────── -->
+<!-- ─── 日別 view: 4 column cards (横断、1 日分) ─────────────── -->
+<div class="day-view active" id="day-view">
 <div class="columns" id="columns">
 
   <!-- A 型 -->
@@ -627,7 +719,9 @@
     </div>
     <div class="card-footer">
       <span class="meta">bt-A-2026-06-30 / 07:00</span>
+      <button class="btn-mini copy">📋 コピー</button>
       <button class="btn-mini save">保存</button>
+      <button class="btn-mini reserved">✅ 予約済</button>
       <button class="btn-mini ng">NG</button>
     </div>
   </div>
@@ -663,7 +757,9 @@
     </div>
     <div class="card-footer">
       <span class="meta">bt-B-2026-06-30 / 07:05</span>
+      <button class="btn-mini copy">📋 コピー</button>
       <button class="btn-mini save">保存</button>
+      <button class="btn-mini reserved">✅ 予約済</button>
       <button class="btn-mini ng">NG</button>
     </div>
   </div>
@@ -699,7 +795,9 @@
     </div>
     <div class="card-footer">
       <span class="meta">bt-O-2026-06-30 / 07:10</span>
+      <button class="btn-mini copy">📋 コピー</button>
       <button class="btn-mini save">保存</button>
+      <button class="btn-mini reserved">✅ 予約済</button>
       <button class="btn-mini ng">NG</button>
     </div>
   </div>
@@ -735,11 +833,27 @@
     </div>
     <div class="card-footer">
       <span class="meta">bt-AB-2026-06-30 / 07:15</span>
+      <button class="btn-mini copy">📋 コピー</button>
       <button class="btn-mini save">保存</button>
+      <button class="btn-mini reserved">✅ 予約済</button>
       <button class="btn-mini ng">NG</button>
     </div>
   </div>
 
+</div>
+</div><!-- end #day-view -->
+
+<!-- ─── アカ別 view: 1 アカ × 7 日縦並び (★まとめ予約運用★) ─── -->
+<div class="account-view" id="account-view">
+  <div class="account-tabs">
+    <button class="account-tab tab-a active" onclick="switchAccount('a')">🔴 A 型 まいにち占い</button>
+    <button class="account-tab tab-b" onclick="switchAccount('b')">🟡 B 型 まいにち占い</button>
+    <button class="account-tab tab-o" onclick="switchAccount('o')">🔵 O 型 まいにち占い</button>
+    <button class="account-tab tab-ab" onclick="switchAccount('ab')">🟣 AB 型 まいにち占い</button>
+  </div>
+  <div class="acct-day-list" id="acct-day-list">
+    <!-- JS で動的生成 -->
+  </div>
 </div>
 
 <!-- ─── Stats panel ─────────────────────────────────────────── -->
@@ -749,7 +863,7 @@
   <div class="stats-block">
     <header>
       <h3>順位バランス</h3>
-      <p>7 日間で各血液型が取った順位の分布。理想平均 2.5。</p>
+      <p>★R1 完全ランダム抽選★ — 短期 (1 週間) の偏りは仕様、365 日で平均 2.5 に収束想定。</p>
     </header>
 
     <div class="dist">
@@ -937,9 +1051,13 @@
 <!-- ─── Bottom info bar ─────────────────────────────────────── -->
 <div class="infobar">
   <div class="row">
-    <div><b>次の投稿:</b> <span id="ib-next">—</span></div>
-    <div><b>在庫:</b> <span id="ib-stock">—</span></div>
+    <div><b>未予約 最早:</b> <span id="ib-next">—</span></div>
+    <div><b>未予約 在庫:</b> <span id="ib-stock">—</span></div>
     <div><b>次バッチ生成:</b> 毎日 23:00 JST</div>
+    <div><b>運用:</b> X 純正予約投稿 (本人操作、上限 64 件/アカ)</div>
+  </div>
+  <div class="row" id="ib-counts" style="margin-top: 10px; font-size: 12px;">
+    <!-- per-account 件数を JS で動的注入 (A: N 件 / 残 M 件) -->
   </div>
 </div>
 
@@ -949,8 +1067,16 @@
 (function() {
   // ────── State ───────────────────────────────────────────
   const BLOODS = ['a', 'b', 'o', 'ab'];
+  const BLOOD_NAMES = { a: 'A', b: 'B', o: 'O', ab: 'AB' };
+  const ACCOUNT_HANDLES = { a: '@TodayAtype', b: '@TodayBtype', o: '@TodayOtype', ab: '@TodayAbtype' };
   const WD = ['日','月','火','水','木','金','土'];
-  const state = { pin: '', data: null, currentDate: null };
+  const state = {
+    pin: '',
+    data: null,
+    currentDate: null,
+    viewMode: 'day',         // 'day' / 'account'
+    currentAccount: 'a',     // account view で選択中の blood
+  };
   const $ = (sel, ctx = document) => ctx.querySelector(sel);
   const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
 
@@ -1034,6 +1160,14 @@
     return queue.find(p => String(p.scheduled_at || '').slice(0, 10) === dStr);
   }
 
+  // queue を scheduled_at 昇順で返す (アカ別 view 用)
+  function queueSorted(blood) {
+    const queue = state.data[blood]?.queue || [];
+    return [...queue].sort((a, b) =>
+      String(a.scheduled_at || '').localeCompare(String(b.scheduled_at || ''))
+    );
+  }
+
   // ────── PIN ─────────────────────────────────────────────
   async function handlePinSubmit() {
     const pin = $('#pin-input').value.trim();
@@ -1079,7 +1213,62 @@
     $('#current-day').textContent = fmt(state.currentDate);
     renderRankPanel();
     renderCards();
+    renderAccountView();
     renderInfoBar();
+  }
+
+  // ────── Account view (1 アカ × N 日縦並び) ────────────────
+  function renderAccountView() {
+    const blood = state.currentAccount;
+    const list = $('#acct-day-list');
+    list.innerHTML = '';
+    const items = queueSorted(blood);
+    if (!items.length) {
+      list.innerHTML = `<p style="color:var(--sub);padding:24px;text-align:center;">この account の queue は空 (全部 ★予約済 → archive★ か、まだ生成されていない)</p>`;
+      return;
+    }
+    for (const entry of items) {
+      const parsed = parseContent(entry.content);
+      const dStr = String(entry.scheduled_at || '').slice(0, 10);
+      const d = new Date(dStr + 'T00:00:00');
+      const wd = WD[d.getDay()];
+      const rank = entry.overall_rank || '?';
+      const card = document.createElement('div');
+      card.className = `acct-day-card blood-${blood}`;
+      card.dataset.id = entry.id;
+      card.dataset.blood = blood;
+      card.innerHTML = `
+        <div class="acct-day-header">
+          <span class="date">${dStr}</span>
+          <span class="wd">(${wd})</span>
+          <span class="rank-mini">${rank} 位 / ${parsed.stars.overall}</span>
+        </div>
+        <div class="acct-day-body" contenteditable="true">${escapeHtml(parsed.body)}</div>
+        <div class="acct-day-stars">
+          ${parsed.header} ・ 恋 ${parsed.stars.love} ・ 仕 ${parsed.stars.work} ・ 金 ${parsed.stars.money}
+        </div>
+        <div class="acct-day-footer">
+          <span class="meta">${entry.id} / ${(entry.scheduled_at || '').slice(11, 16)}</span>
+          <button class="btn-mini copy">📋 コピー</button>
+          <button class="btn-mini save">保存</button>
+          <button class="btn-mini reserved">✅ 予約済</button>
+          <button class="btn-mini ng">NG</button>
+        </div>
+      `;
+      card._entry = entry;
+      card._parsed = parsed;
+      list.appendChild(card);
+    }
+    attachCardListeners(list);
+    // tab UI
+    $$('.account-tab').forEach(b => b.classList.remove('active'));
+    $(`.account-tab.tab-${blood}`).classList.add('active');
+  }
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[c]));
   }
 
   function renderRankPanel() {
@@ -1151,10 +1340,13 @@
     }
   }
 
+  const X_RESERVATION_LIMIT = 64;  // X 予約投稿の 1 アカ上限
+  const RESERVATION_WARN = 60;     // 警告ラインスポット
+
   function renderInfoBar() {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     let stockDays = 0;
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 90; i++) {
       const d = new Date(today); d.setDate(d.getDate() + i);
       const dStr = dateStr(d);
       const allHave = BLOODS.every(b => findEntryForDate(b, dStr));
@@ -1175,6 +1367,27 @@
       : '(なし)';
     $('#ib-next').textContent = nextStr;
     $('#ib-stock').textContent = `${stockDays} 日分`;
+
+    // per-account 件数 (queue) + 64 件上限警告
+    const counts = $('#ib-counts');
+    counts.innerHTML = '';
+    for (const b of BLOODS) {
+      const queueN = (state.data[b]?.queue || []).length;
+      const remain = X_RESERVATION_LIMIT - queueN;
+      let color = 'var(--text)';
+      let suffix = '';
+      if (queueN >= X_RESERVATION_LIMIT) {
+        color = 'var(--ng)';
+        suffix = ' ★上限超★';
+      } else if (queueN >= RESERVATION_WARN) {
+        color = '#c8a64a';
+        suffix = ' ★残僅か★';
+      }
+      const div = document.createElement('div');
+      div.innerHTML = `<b style="color: var(--color-${b});">${BLOOD_NAMES[b]}型:</b> ` +
+        `<span style="color: ${color};">${queueN} 件 / 残 ${remain}${suffix}</span>`;
+      counts.appendChild(div);
+    }
   }
 
   // ────── Day navigation ──────────────────────────────────
@@ -1194,71 +1407,160 @@
     $(`.card[data-blood="${blood}"]`).classList.add('active');
   };
 
-  // ────── Edit / Save / NG ────────────────────────────────
-  function attachListeners() {
-    $$('.one-liner[contenteditable]').forEach(el => {
-      el.addEventListener('input', () => {
-        const card = el.closest('.card');
-        if (!card._entry) return;
-        card._dirty = true;
-        const saveBtn = $('.btn-mini.save', card);
-        saveBtn.classList.add('dirty');
-        saveBtn.textContent = '保存 *';
-      });
-    });
-    $$('.btn-mini.save').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const card = btn.closest('.card');
-        if (!card._entry || !card._parsed) return;
-        const blood = card.dataset.blood;
-        const newBody = $('.one-liner', card).textContent.trim();
-        if (!newBody) return alert('本文が空です');
-        const newContent = buildContent(card._parsed, newBody);
-        btn.textContent = '保存中…';
-        btn.disabled = true;
-        try {
-          const result = await fetchAPI('POST', '/api/save', {
-            [blood]: { id: card._entry.id, content: newContent },
-          });
-          if (result.errors && result.errors.length) {
-            throw new Error(result.errors[0].error);
+  // ────── View toggle (日別 ↔ アカ別) ───────────────────────
+  window.switchView = function (mode) {
+    state.viewMode = mode;
+    const isDay = mode === 'day';
+    $('#day-view').classList.toggle('active', isDay);
+    $('#account-view').classList.toggle('active', !isDay);
+    $('#view-day').classList.toggle('active', isDay);
+    $('#view-account').classList.toggle('active', !isDay);
+    // 日別では day-nav + rank-panel を表示、アカ別では非表示
+    $('.day-nav').style.display = isDay ? '' : 'none';
+    $('.rank-panel').style.display = isDay ? '' : 'none';
+    $('.blood-tabs').style.display = isDay ? '' : 'none';
+    if (!isDay) renderAccountView();
+  };
+
+  window.switchAccount = function (blood) {
+    state.currentAccount = blood;
+    renderAccountView();
+  };
+
+  // ────── Edit / Save / NG / Copy / Reserved ─────────────
+  // rootEl 配下の .card / .acct-day-card に listener を attach (★4 列 view + アカ別 view 共通★)。
+  // 二重登録防止のため card._listenersAttached フラグで gate。
+  function attachCardListeners(rootEl = document) {
+    const cards = $$('.card, .acct-day-card', rootEl);
+    for (const card of cards) {
+      if (card._listenersAttached) continue;
+      card._listenersAttached = true;
+
+      const bodyEl = $('.one-liner, .acct-day-body', card);
+      if (bodyEl) {
+        bodyEl.addEventListener('input', () => {
+          if (!card._entry) return;
+          card._dirty = true;
+          const saveBtn = $('.btn-mini.save', card);
+          if (saveBtn) {
+            saveBtn.classList.add('dirty');
+            saveBtn.textContent = '保存 *';
           }
-          card._entry.content = newContent;
-          card._parsed = parseContent(newContent);
-          card._dirty = false;
-          btn.classList.remove('dirty');
-          btn.textContent = '保存済 ✓';
-          setTimeout(() => { btn.textContent = '保存'; }, 1500);
-        } catch (err) {
-          alert(`保存失敗: ${err.message || err}`);
-          btn.textContent = '保存 *';
-        } finally {
-          btn.disabled = false;
-        }
+        });
+      }
+
+      const saveBtn = $('.btn-mini.save', card);
+      if (saveBtn) saveBtn.addEventListener('click', () => handleSave(card, saveBtn));
+
+      const copyBtn = $('.btn-mini.copy', card);
+      if (copyBtn) copyBtn.addEventListener('click', () => handleCopy(card, copyBtn));
+
+      const reservedBtn = $('.btn-mini.reserved', card);
+      if (reservedBtn) reservedBtn.addEventListener('click', () => handleReserved(card, reservedBtn));
+
+      const ngBtn = $('.btn-mini.ng', card);
+      if (ngBtn) ngBtn.addEventListener('click', () => handleNg(card, ngBtn));
+    }
+  }
+
+  async function handleSave(card, btn) {
+    if (!card._entry || !card._parsed) return;
+    const blood = card.dataset.blood;
+    const bodyEl = $('.one-liner, .acct-day-body', card);
+    const newBody = (bodyEl?.textContent || '').trim();
+    if (!newBody) return alert('本文が空です');
+    const newContent = buildContent(card._parsed, newBody);
+    btn.textContent = '保存中…';
+    btn.disabled = true;
+    try {
+      const result = await fetchAPI('POST', '/api/save', {
+        [blood]: { id: card._entry.id, content: newContent },
       });
-    });
-    $$('.btn-mini.ng').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const card = btn.closest('.card');
-        if (!card._entry) return;
-        if (!confirm(`この投稿 (${card._entry.id}) を NG にしますか？\n(rejected へ移動、7 日間保持後に削除、復活可能)`)) return;
-        const blood = card.dataset.blood;
-        btn.disabled = true;
-        btn.textContent = '処理中…';
-        try {
-          await fetchAPI('POST', '/api/review', {
-            blood, id: card._entry.id, verdict: 'ng',
-          });
-          state.data = await fetchAPI('GET', '/api/load');
-          renderAll();
-        } catch (err) {
-          alert(`NG 処理失敗: ${err.message || err}`);
-        } finally {
-          btn.disabled = false;
-          btn.textContent = 'NG';
-        }
+      if (result.errors && result.errors.length) throw new Error(result.errors[0].error);
+      card._entry.content = newContent;
+      card._parsed = parseContent(newContent);
+      card._dirty = false;
+      btn.classList.remove('dirty');
+      btn.textContent = '保存済 ✓';
+      setTimeout(() => { btn.textContent = '保存'; }, 1500);
+    } catch (err) {
+      alert(`保存失敗: ${err.message || err}`);
+      btn.textContent = '保存 *';
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function handleCopy(card, btn) {
+    if (!card._entry) return;
+    // ★最新の編集を含めるため★ buildContent から再構築 (未保存の編集も含む)
+    let content = card._entry.content;
+    const bodyEl = $('.one-liner, .acct-day-body', card);
+    if (bodyEl && card._parsed) {
+      const liveBody = bodyEl.textContent.trim();
+      if (liveBody) content = buildContent(card._parsed, liveBody);
+    }
+    try {
+      await navigator.clipboard.writeText(content);
+      btn.classList.add('copied');
+      btn.textContent = '✓ コピー済';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.textContent = '📋 コピー';
+      }, 1500);
+    } catch (err) {
+      // fallback: textarea 経由
+      const ta = document.createElement('textarea');
+      ta.value = content;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch {}
+      document.body.removeChild(ta);
+      btn.textContent = '✓ コピー済';
+      setTimeout(() => { btn.textContent = '📋 コピー'; }, 1500);
+    }
+  }
+
+  async function handleReserved(card, btn) {
+    if (!card._entry) return;
+    if (!confirm(`この投稿 (${card._entry.id}) を ★予約済★ にマークしますか？\n(archive へ移動、queue 表示から消える)`)) return;
+    const blood = card.dataset.blood;
+    btn.disabled = true;
+    btn.textContent = '処理中…';
+    try {
+      await fetchAPI('POST', '/api/review', {
+        blood, id: card._entry.id, verdict: 'reserved',
       });
-    });
+      state.data = await fetchAPI('GET', '/api/load');
+      renderAll();
+    } catch (err) {
+      alert(`予約済処理失敗: ${err.message || err}`);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '✅ 予約済';
+    }
+  }
+
+  async function handleNg(card, btn) {
+    if (!card._entry) return;
+    if (!confirm(`この投稿 (${card._entry.id}) を NG にしますか？\n(rejected へ移動、7 日間保持後に削除、復活可能)`)) return;
+    const blood = card.dataset.blood;
+    btn.disabled = true;
+    btn.textContent = '処理中…';
+    try {
+      await fetchAPI('POST', '/api/review', {
+        blood, id: card._entry.id, verdict: 'ng',
+      });
+      state.data = await fetchAPI('GET', '/api/load');
+      renderAll();
+    } catch (err) {
+      alert(`NG 処理失敗: ${err.message || err}`);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'NG';
+    }
   }
 
   // ────── Init ────────────────────────────────────────────
@@ -1267,7 +1569,7 @@
     $('#pin-input').addEventListener('keydown', e => {
       if (e.key === 'Enter') handlePinSubmit();
     });
-    attachListeners();
+    attachCardListeners();
     setTimeout(() => $('#pin-input').focus(), 100);
   });
 })();

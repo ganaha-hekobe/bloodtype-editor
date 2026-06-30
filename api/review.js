@@ -1,9 +1,11 @@
 import { checkPin, mutatePosts, nowJst, cleanText, BLOOD_TYPES } from './_lib.js';
 
-// スワイプレビューの結果を反映する。
-//   verdict: 'ok' → queue に残したまま status: ok (投稿される)
-//   verdict: 'ng' → queue から rejected へ移動 (投稿されない、generate.py が
-//                    同テーマ回避 + 補充の材料に)
+// 編集室の判定/予約反映 endpoint。
+//   verdict: 'ok'       → queue に残したまま status: ok (旧:bot 投稿される)
+//   verdict: 'ng'       → queue から rejected へ移動 (投稿されない)
+//   verdict: 'reserved' → ★queue から archive へ移動★ (★凹兵衛さんが X 純正予約投稿済★を mark、
+//                          以降この entry は editor の queue view に表示されない)
+//   verdict: 'unreserve' → ★archive から queue へ戻す★ (誤操作復旧用)
 //   content が同梱されていたら、判定と同時に本文編集も反映 (その場編集)
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -16,11 +18,24 @@ export default async function handler(req, res) {
     const payload = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const { blood, id, verdict } = payload;
     if (!BLOOD_TYPES.includes(blood)) throw new Error(`不明な blood: ${blood}`);
-    if (verdict !== 'ok' && verdict !== 'ng') throw new Error(`不明な verdict: ${verdict}`);
+    const validVerdicts = ['ok', 'ng', 'reserved', 'unreserve'];
+    if (!validVerdicts.includes(verdict)) throw new Error(`不明な verdict: ${verdict}`);
 
     await mutatePosts(
       blood,
       (data) => {
+        if (verdict === 'unreserve') {
+          const archive = data.archive || [];
+          const idx = archive.findIndex((p) => String(p.id) === String(id));
+          if (idx === -1) throw new Error(`id ${id} が archive [${blood}] に見つかりません`);
+          const [post] = archive.splice(idx, 1);
+          delete post.reserved_at;
+          data.queue = data.queue || [];
+          data.queue.push(post);
+          // scheduled_at 順に並び替え
+          data.queue.sort((a, b) => String(a.scheduled_at || '').localeCompare(String(b.scheduled_at || '')));
+          return;
+        }
         const queue = data.queue || [];
         const idx = queue.findIndex((p) => String(p.id) === String(id));
         if (idx === -1) throw new Error(`id ${id} が queue [${blood}] に見つかりません`);
@@ -30,15 +45,20 @@ export default async function handler(req, res) {
         if (verdict === 'ok') {
           queue[idx].status = 'ok';
           queue[idx].reviewed_at = nowJst();
-        } else {
+        } else if (verdict === 'ng') {
           const [post] = queue.splice(idx, 1);
           post.status = 'ng';
           post.rejected_at = nowJst();
           data.rejected = data.rejected || [];
           data.rejected.push(post);
+        } else if (verdict === 'reserved') {
+          const [post] = queue.splice(idx, 1);
+          post.reserved_at = nowJst();
+          data.archive = data.archive || [];
+          data.archive.push(post);
         }
       },
-      `review(${blood}): ${id} を ${verdict === 'ok' ? '良い' : 'NG'} 判定`,
+      `review(${blood}): ${id} → ${verdict}`,
     );
     res.status(200).json({ ok: true });
   } catch (e) {
