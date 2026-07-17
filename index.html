@@ -154,6 +154,19 @@
   }
   .blood-a .avatar { background: var(--color-a); }
   .blood-b .avatar { background: var(--color-b); color: #fff; }
+
+  /* tab-dot: 絵文字🔴🟡等の代わりに、CSS 変数連動の色付き円 */
+  .tab-dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  .tab-a .tab-dot { background: var(--color-a); }
+  .tab-b .tab-dot { background: var(--color-b); }
+  .tab-o .tab-dot { background: var(--color-o); }
+  .tab-ab .tab-dot { background: var(--color-ab); }
   .blood-o .avatar { background: var(--color-o); }
   .blood-ab .avatar { background: var(--color-ab); }
   .account {
@@ -767,10 +780,10 @@
 
 <!-- ─── Blood type tabs (mobile only) ───────────────────────── -->
 <div class="blood-tabs">
-  <button class="blood-tab tab-a active" onclick="switchTab('a')">🔴 A</button>
-  <button class="blood-tab tab-b" onclick="switchTab('b')">🟡 B</button>
-  <button class="blood-tab tab-o" onclick="switchTab('o')">🔵 O</button>
-  <button class="blood-tab tab-ab" onclick="switchTab('ab')">🟣 AB</button>
+  <button class="blood-tab tab-a active" onclick="switchTab('a')"><span class="tab-dot"></span>A</button>
+  <button class="blood-tab tab-b" onclick="switchTab('b')"><span class="tab-dot"></span>B</button>
+  <button class="blood-tab tab-o" onclick="switchTab('o')"><span class="tab-dot"></span>O</button>
+  <button class="blood-tab tab-ab" onclick="switchTab('ab')"><span class="tab-dot"></span>AB</button>
 </div>
 
 <!-- ─── 日別 view: 4 column cards (横断、1 日分) ─────────────── -->
@@ -939,10 +952,10 @@
 <!-- ─── アカ別 view: 1 アカ × 7 日縦並び (★まとめ予約運用★) ─── -->
 <div class="account-view" id="account-view">
   <div class="account-tabs">
-    <button class="account-tab tab-a active" onclick="switchAccount('a')">🔴 A 型 まいにち占い</button>
-    <button class="account-tab tab-b" onclick="switchAccount('b')">🟡 B 型 まいにち占い</button>
-    <button class="account-tab tab-o" onclick="switchAccount('o')">🔵 O 型 まいにち占い</button>
-    <button class="account-tab tab-ab" onclick="switchAccount('ab')">🟣 AB 型 まいにち占い</button>
+    <button class="account-tab tab-a active" onclick="switchAccount('a')"><span class="tab-dot"></span>A 型 まいにち占い</button>
+    <button class="account-tab tab-b" onclick="switchAccount('b')"><span class="tab-dot"></span>B 型 まいにち占い</button>
+    <button class="account-tab tab-o" onclick="switchAccount('o')"><span class="tab-dot"></span>O 型 まいにち占い</button>
+    <button class="account-tab tab-ab" onclick="switchAccount('ab')"><span class="tab-dot"></span>AB 型 まいにち占い</button>
   </div>
   <div class="acct-day-list" id="acct-day-list">
     <!-- JS で動的生成 -->
