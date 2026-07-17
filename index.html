@@ -1097,11 +1097,14 @@
   async function fetchAPI(method, url, body) {
     const opts = {
       method,
-      headers: { 'x-pin': state.pin, 'Content-Type': 'application/json' },
+      headers: { 'x-pin': getPin(), 'Content-Type': 'application/json' },
     };
     if (body) opts.body = JSON.stringify(body);
     const res = await fetch(url, opts);
-    if (res.status === 401) throw new Error('PIN が違います');
+    if (res.status === 401) {
+      clearPin();
+      throw new Error('PIN が違います (再入力してください)');
+    }
     if (!res.ok) {
       let err = `Error ${res.status}`;
       try { const j = await res.json(); err = j.error || err; } catch {}
