@@ -271,6 +271,25 @@
   .btn-mini .icon-svg { width: 12px; height: 12px; vertical-align: -1px; margin-right: 3px; }
   #show-archive-btn .icon-svg { width: 13px; height: 13px; vertical-align: -2px; margin-right: 4px; }
 
+  /* archive modal */
+  .archive-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 1000; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto; }
+  .archive-modal.active { display: flex; }
+  .archive-panel { background: var(--card); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 720px; padding: 24px; }
+  .archive-panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .archive-panel-header h2 { font-size: 15px; font-weight: 700; }
+  .archive-close { background: none; border: 1px solid var(--border); color: var(--text); border-radius: 999px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
+  .archive-list { display: flex; flex-direction: column; gap: 8px; max-height: 60vh; overflow-y: auto; }
+  .archive-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); font-size: 12px; }
+  .archive-item.blood-a { border-left: 3px solid var(--color-a); }
+  .archive-item.blood-b { border-left: 3px solid var(--color-b); }
+  .archive-item.blood-o { border-left: 3px solid var(--color-o); }
+  .archive-item.blood-ab { border-left: 3px solid var(--color-ab); }
+  .archive-item .date { font-weight: 700; min-width: 90px; font-variant-numeric: tabular-nums; }
+  .archive-item .blood-label { font-weight: 700; min-width: 30px; }
+  .archive-item .preview { flex: 1; color: var(--sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .archive-item .btn-mini { padding: 4px 10px; }
+  .archive-empty { padding: 32px; text-align: center; color: var(--sub); font-size: 13px; }
+
   /* ─── View toggle ─────────────────────────────────────────── */
   .view-toggle {
     display: inline-flex; gap: 0;
@@ -669,7 +688,7 @@
     <button id="view-day" class="active" onclick="switchView('day')"><svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>日別</button>
     <button id="view-account" onclick="switchView('account')"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>アカ別</button>
   </div>
-  <button id="show-archive-btn" onclick="alert('予約済一覧\n(未実装、archive を表示予定)')"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M21 8V21H3V8"/><rect x="1" y="3" width="22" height="5" rx="1"/><line x1="10" y1="12" x2="14" y2="12"/></svg>予約済</button>
+  <button id="show-archive-btn" onclick="showArchive()"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M21 8V21H3V8"/><rect x="1" y="3" width="22" height="5" rx="1"/><line x1="10" y1="12" x2="14" y2="12"/></svg>予約済</button>
 </div>
 
 <!-- ─── Day navigation ──────────────────────────────────────── -->
@@ -1095,6 +1114,17 @@
   </div>
 </div>
 
+<!-- 予約済一覧 modal -->
+<div class="archive-modal" id="archive-modal" onclick="if(event.target===this)hideArchive()">
+  <div class="archive-panel">
+    <div class="archive-panel-header">
+      <h2>予約済一覧 <span id="archive-count" style="color:var(--sub);font-weight:400;font-size:12px;margin-left:8px;"></span></h2>
+      <button class="archive-close" onclick="hideArchive()">閉じる</button>
+    </div>
+    <div class="archive-list" id="archive-list"></div>
+  </div>
+</div>
+
 </div><!-- end #app-view -->
 
 <script>
@@ -1497,6 +1527,60 @@
     state.currentAccount = blood;
     renderAccountView();
   };
+
+  // ────── Archive modal (予約済一覧 + unreserve) ────────────
+  window.showArchive = function () {
+    const list = $('#archive-list');
+    const items = [];
+    for (const b of BLOODS) {
+      for (const p of state.data[b]?.archive || []) {
+        items.push({ ...p, blood: b });
+      }
+    }
+    items.sort((a, b) => String(a.scheduled_at || '').localeCompare(String(b.scheduled_at || '')));
+    $('#archive-count').textContent = items.length ? `(${items.length} 件)` : '';
+    if (!items.length) {
+      list.innerHTML = '<div class="archive-empty">予約済の投稿はまだありません。</div>';
+    } else {
+      list.innerHTML = '';
+      for (const p of items) {
+        const parsed = parseContent(p.content);
+        const dStr = String(p.scheduled_at || '').slice(0, 10);
+        const item = document.createElement('div');
+        item.className = `archive-item blood-${p.blood}`;
+        item.innerHTML = `
+          <span class="date">${dStr}</span>
+          <span class="blood-label" style="color:var(--color-${p.blood});">${BLOOD_NAMES[p.blood]}型</span>
+          <span class="preview">${escapeHtml((parsed.body || '').slice(0, 50))}</span>
+          <button class="btn-mini" data-blood="${p.blood}" data-id="${p.id}">↺ 戻す</button>
+        `;
+        list.appendChild(item);
+      }
+      $$('#archive-list .btn-mini').forEach(btn => {
+        btn.addEventListener('click', () => handleUnreserve(btn.dataset.blood, btn.dataset.id, btn));
+      });
+    }
+    $('#archive-modal').classList.add('active');
+  };
+
+  window.hideArchive = function () {
+    $('#archive-modal').classList.remove('active');
+  };
+
+  async function handleUnreserve(blood, id, btn) {
+    btn.disabled = true;
+    btn.textContent = '処理中…';
+    try {
+      await fetchAPI('POST', '/api/review', { blood, id, verdict: 'unreserve' });
+      state.data = await fetchAPI('GET', '/api/load');
+      renderAll();
+      showArchive();
+    } catch (err) {
+      alert(`戻す処理失敗: ${err.message || err}`);
+      btn.disabled = false;
+      btn.textContent = '↺ 戻す';
+    }
+  }
 
   // ────── Edit / Save / NG / Copy / Reserved ─────────────
   // rootEl 配下の .card / .acct-day-card に listener を attach (★4 列 view + アカ別 view 共通★)。
