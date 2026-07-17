@@ -237,6 +237,27 @@
   .btn-mini.unreserve { border-color: var(--sub); color: var(--sub); }
   .btn-mini.unreserve:hover { border-color: var(--accent); color: var(--accent); }
 
+  /* ─── 予約マーク (右上、ワンクリック) ────────────────────── */
+  .reserve-mark {
+    margin-left: auto;
+    background: none;
+    border: 1.5px solid var(--border);
+    color: var(--sub);
+    border-radius: 50%;
+    width: 34px; height: 34px;
+    font-size: 15px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 120ms ease;
+  }
+  .reserve-mark:hover {
+    border-color: #c8a64a;
+    color: #c8a64a;
+    background: rgba(200, 166, 74, 0.1);
+  }
+  .reserve-mark:active { transform: scale(0.92); }
+
   /* ─── View toggle ─────────────────────────────────────────── */
   .view-toggle {
     display: inline-flex; gap: 0;
@@ -696,6 +717,7 @@
         A型 まいにち占い
         <span class="handle">@TodayAtype</span>
       </div>
+      <button class="reserve-mark" title="予約済にする">📥</button>
     </div>
     <div class="card-body">
       <div class="stars-row overall">
@@ -721,7 +743,6 @@
       <span class="meta">bt-A-2026-06-30 / 07:00</span>
       <button class="btn-mini copy">📋 コピー</button>
       <button class="btn-mini save">保存</button>
-      <button class="btn-mini reserved">✅ 予約済</button>
       <button class="btn-mini ng">NG</button>
     </div>
   </div>
@@ -734,6 +755,7 @@
         B型 まいにち占い
         <span class="handle">@TodayBtype</span>
       </div>
+      <button class="reserve-mark" title="予約済にする">📥</button>
     </div>
     <div class="card-body">
       <div class="stars-row overall">
@@ -759,7 +781,6 @@
       <span class="meta">bt-B-2026-06-30 / 07:05</span>
       <button class="btn-mini copy">📋 コピー</button>
       <button class="btn-mini save">保存</button>
-      <button class="btn-mini reserved">✅ 予約済</button>
       <button class="btn-mini ng">NG</button>
     </div>
   </div>
@@ -772,6 +793,7 @@
         O型 まいにち占い
         <span class="handle">@TodayOtype</span>
       </div>
+      <button class="reserve-mark" title="予約済にする">📥</button>
     </div>
     <div class="card-body">
       <div class="stars-row overall">
@@ -797,7 +819,6 @@
       <span class="meta">bt-O-2026-06-30 / 07:10</span>
       <button class="btn-mini copy">📋 コピー</button>
       <button class="btn-mini save">保存</button>
-      <button class="btn-mini reserved">✅ 予約済</button>
       <button class="btn-mini ng">NG</button>
     </div>
   </div>
@@ -810,6 +831,7 @@
         AB型 まいにち占い
         <span class="handle">@TodayAbtype</span>
       </div>
+      <button class="reserve-mark" title="予約済にする">📥</button>
     </div>
     <div class="card-body">
       <div class="stars-row overall">
@@ -835,7 +857,6 @@
       <span class="meta">bt-AB-2026-06-30 / 07:15</span>
       <button class="btn-mini copy">📋 コピー</button>
       <button class="btn-mini save">保存</button>
-      <button class="btn-mini reserved">✅ 予約済</button>
       <button class="btn-mini ng">NG</button>
     </div>
   </div>
@@ -1131,7 +1152,7 @@
         { keys: ['総合運', '総合'], out: 'overall' },
         { keys: ['恋愛運', '恋愛', '恋'], out: 'love' },
         { keys: ['仕事運', '仕事', '仕'], out: 'work' },
-        { keys: ['金銭運', '金銭', '金'], out: 'money' },
+        { keys: ['金運', '金銭運', '金銭', '金'], out: 'money' },
       ];
       let _hit = false;
       for (const { keys, out } of _matches) {
@@ -1167,8 +1188,8 @@
     return [
       parsed.header,
       '',
-      `総合${parsed.stars.overall} 恋${parsed.stars.love}`,
-      `仕${parsed.stars.work} 金${parsed.stars.money}`,
+      `総合${parsed.stars.overall} 恋愛${parsed.stars.love}`,
+      `仕事${parsed.stars.work} 金運${parsed.stars.money}`,
       '',
       parsed.rankingLine || '',
       '',
@@ -1273,16 +1294,16 @@
           <span class="date">${dStr}</span>
           <span class="wd">(${wd})</span>
           <span class="rank-mini">${rank} 位 / ${parsed.stars.overall}</span>
+          <button class="reserve-mark" title="予約済にする">📥</button>
         </div>
         <div class="acct-day-body" contenteditable="true">${escapeHtml(parsed.body)}</div>
         <div class="acct-day-stars">
-          ${parsed.header} ・ 恋 ${parsed.stars.love} ・ 仕 ${parsed.stars.work} ・ 金 ${parsed.stars.money}
+          ${escapeHtml(parsed.header)} ・ 恋愛 ${parsed.stars.love} ・ 仕事 ${parsed.stars.work} ・ 金運 ${parsed.stars.money}
         </div>
         <div class="acct-day-footer">
           <span class="meta">${entry.id} / ${(entry.scheduled_at || '').slice(11, 16)}</span>
           <button class="btn-mini copy">📋 コピー</button>
           <button class="btn-mini save">保存</button>
-          <button class="btn-mini reserved">✅ 予約済</button>
           <button class="btn-mini ng">NG</button>
         </div>
       `;
@@ -1488,8 +1509,8 @@
       const copyBtn = $('.btn-mini.copy', card);
       if (copyBtn) copyBtn.addEventListener('click', () => handleCopy(card, copyBtn));
 
-      const reservedBtn = $('.btn-mini.reserved', card);
-      if (reservedBtn) reservedBtn.addEventListener('click', () => handleReserved(card, reservedBtn));
+      const reserveBtn = $('.reserve-mark', card);
+      if (reserveBtn) reserveBtn.addEventListener('click', () => handleReserved(card, reserveBtn));
 
       const ngBtn = $('.btn-mini.ng', card);
       if (ngBtn) ngBtn.addEventListener('click', () => handleNg(card, ngBtn));
@@ -1558,10 +1579,11 @@
 
   async function handleReserved(card, btn) {
     if (!card._entry) return;
-    if (!confirm(`この投稿 (${card._entry.id}) を ★予約済★ にマークしますか？\n(archive へ移動、queue 表示から消える)`)) return;
+    // ワンクリック予約済化 (confirm なし)、押した瞬間視覚 feedback
     const blood = card.dataset.blood;
     btn.disabled = true;
-    btn.textContent = '処理中…';
+    btn.classList.add('done');
+    btn.textContent = '✓';
     try {
       await fetchAPI('POST', '/api/review', {
         blood, id: card._entry.id, verdict: 'reserved',
@@ -1570,9 +1592,9 @@
       renderAll();
     } catch (err) {
       alert(`予約済処理失敗: ${err.message || err}`);
-    } finally {
+      btn.classList.remove('done');
       btn.disabled = false;
-      btn.textContent = '✅ 予約済';
+      btn.textContent = '📥';
     }
   }
 
