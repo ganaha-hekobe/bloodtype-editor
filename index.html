@@ -614,7 +614,7 @@
 </head>
 <body>
 
-<!-- ─── PIN gate ────────────────────────────────────────────── -->
+<!-- ─── PIN gate (★nul-editor 方式: 初回のみ、localStorage 永続保存★) ─── -->
 <div id="pin-view">
   <div class="pin-logo">
     <img src="/avatar.png" alt="血液型 まいにち占い">
@@ -625,7 +625,7 @@
   <div id="pin-error"></div>
 </div>
 
-<!-- ─── App view (PIN 入力後表示) ───────────────────────────── -->
+<!-- ─── App view (localStorage に PIN あれば初期表示) ───────── -->
 <div id="app-view">
 
 <!-- ─── Toolbar ─────────────────────────────────────────────── -->
@@ -1071,12 +1071,17 @@
   const ACCOUNT_HANDLES = { a: '@TodayAtype', b: '@TodayBtype', o: '@TodayOtype', ab: '@TodayAbtype' };
   const WD = ['日','月','火','水','木','金','土'];
   const state = {
-    pin: '',
     data: null,
     currentDate: null,
     viewMode: 'day',         // 'day' / 'account'
     currentAccount: 'a',     // account view で選択中の blood
   };
+
+  // ★nul-editor 方式★: PIN は localStorage に永続保存、2 回目以降は即開く
+  const PIN_STORAGE_KEY = 'bt_pin';
+  function getPin() { return localStorage.getItem(PIN_STORAGE_KEY) || ''; }
+  function setPin(v) { localStorage.setItem(PIN_STORAGE_KEY, v); }
+  function clearPin() { localStorage.removeItem(PIN_STORAGE_KEY); }
   const $ = (sel, ctx = document) => ctx.querySelector(sel);
   const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
 
@@ -1168,28 +1173,38 @@
     );
   }
 
-  // ────── PIN ─────────────────────────────────────────────
+  // ────── PIN (★nul-editor 方式: localStorage 永続、初回のみ入力★) ──
+  function showPin(msg) {
+    $('#pin-view').style.display = '';
+    $('#app-view').style.display = 'none';
+    $('#pin-error').textContent = msg || '';
+    setTimeout(() => $('#pin-input').focus(), 50);
+  }
+  function hidePin() {
+    $('#pin-view').style.display = 'none';
+    $('#app-view').style.display = 'block';
+  }
+  async function tryLoad() {
+    try {
+      state.data = await fetchAPI('GET', '/api/load');
+      state.currentDate = pickInitialDate();
+      hidePin();
+      renderAll();
+    } catch (err) {
+      // fetchAPI 内で 401 なら clearPin 済 → gate 表示
+      showPin(err.message || '読み込み失敗');
+    }
+  }
   async function handlePinSubmit() {
     const pin = $('#pin-input').value.trim();
     if (!pin) return;
-    state.pin = pin;
+    setPin(pin);
     $('#pin-error').textContent = '';
     const btn = $('#pin-btn');
     btn.textContent = '読み込み中…';
     btn.disabled = true;
-    try {
-      state.data = await fetchAPI('GET', '/api/load');
-      state.currentDate = pickInitialDate();
-      $('#pin-view').style.display = 'none';
-      $('#app-view').style.display = 'block';
-      renderAll();
-    } catch (err) {
-      state.pin = '';
-      $('#pin-error').textContent = err.message || 'PIN または接続エラー';
-    } finally {
-      btn.textContent = 'ひらく';
-      btn.disabled = false;
-    }
+    try { await tryLoad(); }
+    finally { btn.textContent = 'ひらく'; btn.disabled = false; }
   }
 
   function pickInitialDate() {
@@ -1570,7 +1585,12 @@
       if (e.key === 'Enter') handlePinSubmit();
     });
     attachCardListeners();
-    setTimeout(() => $('#pin-input').focus(), 100);
+    // ★nul-editor 方式★: localStorage に PIN あれば即ロード、なければ gate 表示
+    if (getPin()) {
+      tryLoad();
+    } else {
+      showPin();
+    }
   });
 })();
 </script>
