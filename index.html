@@ -257,6 +257,19 @@
     background: rgba(200, 166, 74, 0.1);
   }
   .reserve-mark:active { transform: scale(0.92); }
+  .reserve-mark.done { border-color: #c8a64a; background: #c8a64a; color: #000; }
+
+  /* SVG line-icon (UI 全体トンマナ統一) */
+  .icon-svg {
+    width: 16px; height: 16px;
+    stroke: currentColor; fill: none;
+    stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round;
+    vertical-align: -3px;
+  }
+  .reserve-mark .icon-svg { width: 18px; height: 18px; vertical-align: middle; }
+  .view-toggle .icon-svg { width: 14px; height: 14px; vertical-align: -2px; margin-right: 4px; }
+  .btn-mini .icon-svg { width: 12px; height: 12px; vertical-align: -1px; margin-right: 3px; }
+  #show-archive-btn .icon-svg { width: 13px; height: 13px; vertical-align: -2px; margin-right: 4px; }
 
   /* ─── View toggle ─────────────────────────────────────────── */
   .view-toggle {
@@ -653,10 +666,10 @@
 <div class="toolbar">
   <span class="title">血液型 まいにち占い 編集室</span>
   <div class="view-toggle">
-    <button id="view-day" class="active" onclick="switchView('day')">📅 日別</button>
-    <button id="view-account" onclick="switchView('account')">👤 アカ別</button>
+    <button id="view-day" class="active" onclick="switchView('day')"><svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>日別</button>
+    <button id="view-account" onclick="switchView('account')"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>アカ別</button>
   </div>
-  <button id="show-archive-btn" onclick="alert('予約済一覧\n(未実装、archive を表示予定)')">予約済</button>
+  <button id="show-archive-btn" onclick="alert('予約済一覧\n(未実装、archive を表示予定)')"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M21 8V21H3V8"/><rect x="1" y="3" width="22" height="5" rx="1"/><line x1="10" y1="12" x2="14" y2="12"/></svg>予約済</button>
 </div>
 
 <!-- ─── Day navigation ──────────────────────────────────────── -->
@@ -717,7 +730,7 @@
         A型 まいにち占い
         <span class="handle">@TodayAtype</span>
       </div>
-      <button class="reserve-mark" title="予約済にする">📥</button>
+      <button class="reserve-mark" title="予約済にする"><svg class="icon-svg" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
     </div>
     <div class="card-body">
       <div class="stars-row overall">
@@ -741,9 +754,9 @@
     </div>
     <div class="card-footer">
       <span class="meta">bt-A-2026-06-30 / 07:00</span>
-      <button class="btn-mini copy">📋 コピー</button>
-      <button class="btn-mini save">保存</button>
-      <button class="btn-mini ng">NG</button>
+      <button class="btn-mini copy"><svg class="icon-svg" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>コピー</button>
+      <button class="btn-mini save"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>保存</button>
+      <button class="btn-mini ng"><svg class="icon-svg" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>NG</button>
     </div>
   </div>
 
@@ -755,7 +768,7 @@
         B型 まいにち占い
         <span class="handle">@TodayBtype</span>
       </div>
-      <button class="reserve-mark" title="予約済にする">📥</button>
+      <button class="reserve-mark" title="予約済にする"><svg class="icon-svg" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
     </div>
     <div class="card-body">
       <div class="stars-row overall">
@@ -779,9 +792,9 @@
     </div>
     <div class="card-footer">
       <span class="meta">bt-B-2026-06-30 / 07:05</span>
-      <button class="btn-mini copy">📋 コピー</button>
-      <button class="btn-mini save">保存</button>
-      <button class="btn-mini ng">NG</button>
+      <button class="btn-mini copy"><svg class="icon-svg" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>コピー</button>
+      <button class="btn-mini save"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>保存</button>
+      <button class="btn-mini ng"><svg class="icon-svg" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>NG</button>
     </div>
   </div>
 
@@ -793,7 +806,7 @@
         O型 まいにち占い
         <span class="handle">@TodayOtype</span>
       </div>
-      <button class="reserve-mark" title="予約済にする">📥</button>
+      <button class="reserve-mark" title="予約済にする"><svg class="icon-svg" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
     </div>
     <div class="card-body">
       <div class="stars-row overall">
@@ -817,9 +830,9 @@
     </div>
     <div class="card-footer">
       <span class="meta">bt-O-2026-06-30 / 07:10</span>
-      <button class="btn-mini copy">📋 コピー</button>
-      <button class="btn-mini save">保存</button>
-      <button class="btn-mini ng">NG</button>
+      <button class="btn-mini copy"><svg class="icon-svg" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>コピー</button>
+      <button class="btn-mini save"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>保存</button>
+      <button class="btn-mini ng"><svg class="icon-svg" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>NG</button>
     </div>
   </div>
 
@@ -831,7 +844,7 @@
         AB型 まいにち占い
         <span class="handle">@TodayAbtype</span>
       </div>
-      <button class="reserve-mark" title="予約済にする">📥</button>
+      <button class="reserve-mark" title="予約済にする"><svg class="icon-svg" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
     </div>
     <div class="card-body">
       <div class="stars-row overall">
@@ -855,9 +868,9 @@
     </div>
     <div class="card-footer">
       <span class="meta">bt-AB-2026-06-30 / 07:15</span>
-      <button class="btn-mini copy">📋 コピー</button>
-      <button class="btn-mini save">保存</button>
-      <button class="btn-mini ng">NG</button>
+      <button class="btn-mini copy"><svg class="icon-svg" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>コピー</button>
+      <button class="btn-mini save"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>保存</button>
+      <button class="btn-mini ng"><svg class="icon-svg" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>NG</button>
     </div>
   </div>
 
@@ -1106,6 +1119,10 @@
   const $ = (sel, ctx = document) => ctx.querySelector(sel);
   const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
 
+  // SVG line-icon 定数 (JS 内 innerHTML 差し替え用)
+  const SVG_COPY = '<svg class="icon-svg" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+  const SVG_CHECK = '<svg class="icon-svg" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+
   // ────── Date helpers (★local time、UTC で日付がズレる bug 回避★) ──
   function pad(n) { return String(n).padStart(2, '0'); }
   function dateStr(d) {
@@ -1294,7 +1311,7 @@
           <span class="date">${dStr}</span>
           <span class="wd">(${wd})</span>
           <span class="rank-mini">${rank} 位 / ${parsed.stars.overall}</span>
-          <button class="reserve-mark" title="予約済にする">📥</button>
+          <button class="reserve-mark" title="予約済にする"><svg class="icon-svg" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
         </div>
         <div class="acct-day-body" contenteditable="true">${escapeHtml(parsed.body)}</div>
         <div class="acct-day-stars">
@@ -1302,9 +1319,9 @@
         </div>
         <div class="acct-day-footer">
           <span class="meta">${entry.id} / ${(entry.scheduled_at || '').slice(11, 16)}</span>
-          <button class="btn-mini copy">📋 コピー</button>
-          <button class="btn-mini save">保存</button>
-          <button class="btn-mini ng">NG</button>
+          <button class="btn-mini copy"><svg class="icon-svg" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>コピー</button>
+          <button class="btn-mini save"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>保存</button>
+          <button class="btn-mini ng"><svg class="icon-svg" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>NG</button>
         </div>
       `;
       card._entry = entry;
@@ -1557,10 +1574,10 @@
     try {
       await navigator.clipboard.writeText(content);
       btn.classList.add('copied');
-      btn.textContent = '✓ コピー済';
+      btn.innerHTML = SVG_CHECK + 'コピー済';
       setTimeout(() => {
         btn.classList.remove('copied');
-        btn.textContent = '📋 コピー';
+        btn.innerHTML = SVG_COPY + 'コピー';
       }, 1500);
     } catch (err) {
       // fallback: textarea 経由
@@ -1572,18 +1589,17 @@
       ta.select();
       try { document.execCommand('copy'); } catch {}
       document.body.removeChild(ta);
-      btn.textContent = '✓ コピー済';
-      setTimeout(() => { btn.textContent = '📋 コピー'; }, 1500);
+      btn.innerHTML = SVG_CHECK + 'コピー済';
+      setTimeout(() => { btn.innerHTML = SVG_COPY + 'コピー'; }, 1500);
     }
   }
 
   async function handleReserved(card, btn) {
     if (!card._entry) return;
-    // ワンクリック予約済化 (confirm なし)、押した瞬間視覚 feedback
+    // ワンクリック予約済化 (confirm なし)、押した瞬間視覚 feedback (SVG は破壊しない)
     const blood = card.dataset.blood;
     btn.disabled = true;
     btn.classList.add('done');
-    btn.textContent = '✓';
     try {
       await fetchAPI('POST', '/api/review', {
         blood, id: card._entry.id, verdict: 'reserved',
@@ -1594,7 +1610,6 @@
       alert(`予約済処理失敗: ${err.message || err}`);
       btn.classList.remove('done');
       btn.disabled = false;
-      btn.textContent = '📥';
     }
   }
 
