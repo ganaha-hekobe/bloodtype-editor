@@ -1227,7 +1227,8 @@
     const result = {
       header: '',
       stars: { overall: '★★★☆☆', love: '★★★☆☆', work: '★★★☆☆', money: '★★★☆☆' },
-      rankingLine: '',
+      rankingTop3: '',
+      rankingFourth: '',
       body: '',
     };
     let i = 0;
@@ -1253,21 +1254,23 @@
       }
       if (_hit) continue;
       if (line.startsWith('🏆')) {
-        if (i + 1 < lines.length) result.rankingLine = lines[++i];
+        if (i + 1 < lines.length) result.rankingTop3 = lines[++i];
         i++;
         break;
       }
       if (line.indexOf('🥇') >= 0) {
-        result.rankingLine = line;
-        i++;
+        result.rankingTop3 = line;
+        if (i + 1 < lines.length && lines[i + 1].startsWith('4位')) {
+          result.rankingFourth = lines[i + 1];
+          i += 2;
+        } else {
+          i++;
+        }
         break;
       }
     }
-    const bodyLines = [];
-    for (; i < lines.length; i++) {
-      if (lines[i].trim()) bodyLines.push(lines[i]);
-    }
-    result.body = bodyLines.join('\n');
+    while (i < lines.length && lines[i].trim() === '') i++;
+    result.body = lines.slice(i).join('\n').replace(/\n+$/, '');
     return result;
   }
 
@@ -1275,10 +1278,13 @@
     return [
       parsed.header,
       '',
-      `総合${parsed.stars.overall} 恋愛${parsed.stars.love}`,
-      `仕事${parsed.stars.work} 金運${parsed.stars.money}`,
+      `総合${parsed.stars.overall}`,
+      `恋愛${parsed.stars.love}`,
+      `仕事${parsed.stars.work}`,
+      `金運${parsed.stars.money}`,
       '',
-      parsed.rankingLine || '',
+      parsed.rankingTop3 || '',
+      parsed.rankingFourth || '',
       '',
       newBody,
     ].join('\n');
@@ -1415,27 +1421,33 @@
     const dStr = dateStr(state.currentDate);
     $('.rp-date').textContent = fmt(state.currentDate);
     const stars = {};
-    let rankingLine = '';
+    let rankingCombined = '';
     for (const b of BLOODS) {
       const e = findEntryForDate(b, dStr);
       if (e) {
         const p = parseContent(e.content);
         stars[b] = p.stars.overall;
-        if (!rankingLine && p.rankingLine) rankingLine = p.rankingLine;
+        if (!rankingCombined) {
+          rankingCombined = [p.rankingTop3, p.rankingFourth].filter(Boolean).join(' ');
+        }
       }
     }
-    if (!rankingLine) {
+    if (!rankingCombined) {
       $$('.rp-cell').forEach(cell => {
         $('.rp-stars', cell).textContent = '—';
       });
       return;
     }
-    const iconToPos = { '🥇': '1位', '🥈': '2位', '🥉': '3位', '▫': '4位', '4位': '4位' };
-    const _rx = /(🥇|🥈|🥉|▫|4位)\s*([ABO]+)型?/g;
+    const iconToPos = { '🥇': '1位', '🥈': '2位', '🥉': '3位' };
+    const _rx = /(🥇|🥈|🥉)\s*(AB|A|B|O)型?|4位(?:は…?)?\s*(AB|A|B|O)型/g;
     const segments = [];
     let _mm;
-    while ((_mm = _rx.exec(rankingLine)) !== null) {
-      segments.push({ label: iconToPos[_mm[1]] || _mm[1], bloodU: _mm[2].toUpperCase() });
+    while ((_mm = _rx.exec(rankingCombined)) !== null) {
+      if (_mm[1]) {
+        segments.push({ label: iconToPos[_mm[1]], bloodU: _mm[2].toUpperCase() });
+      } else if (_mm[3]) {
+        segments.push({ label: '4位', bloodU: _mm[3].toUpperCase() });
+      }
     }
     const cells = $$('.rp-cell');
     segments.forEach((seg, idx) => {
