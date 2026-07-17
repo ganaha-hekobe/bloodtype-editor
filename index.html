@@ -1119,7 +1119,6 @@
     const result = {
       header: '',
       stars: { overall: '★★★☆☆', love: '★★★☆☆', work: '★★★☆☆', money: '★★★☆☆' },
-      rankingTitle: '',
       rankingLine: '',
       body: '',
     };
@@ -1128,13 +1127,30 @@
     if (i < lines.length) result.header = lines[i++];
     for (; i < lines.length; i++) {
       const line = lines[i];
-      if (line.startsWith('総合運 ')) result.stars.overall = line.substring(4);
-      else if (line.startsWith('恋愛運 ')) result.stars.love = line.substring(4);
-      else if (line.startsWith('仕事運 ')) result.stars.work = line.substring(4);
-      else if (line.startsWith('金銭運 ')) result.stars.money = line.substring(4);
-      else if (line.startsWith('🏆')) {
-        result.rankingTitle = line;
+      const _matches = [
+        { keys: ['総合運', '総合'], out: 'overall' },
+        { keys: ['恋愛運', '恋愛', '恋'], out: 'love' },
+        { keys: ['仕事運', '仕事', '仕'], out: 'work' },
+        { keys: ['金銭運', '金銭', '金'], out: 'money' },
+      ];
+      let _hit = false;
+      for (const { keys, out } of _matches) {
+        for (const k of keys) {
+          const idx = line.indexOf(k);
+          if (idx === -1) continue;
+          const after = line.substring(idx + k.length).trimStart();
+          const m = after.match(/([★☆]{5})/);
+          if (m) { result.stars[out] = m[1]; _hit = true; }
+        }
+      }
+      if (_hit) continue;
+      if (line.startsWith('🏆')) {
         if (i + 1 < lines.length) result.rankingLine = lines[++i];
+        i++;
+        break;
+      }
+      if (line.indexOf('🥇') >= 0) {
+        result.rankingLine = line;
         i++;
         break;
       }
@@ -1151,13 +1167,10 @@
     return [
       parsed.header,
       '',
-      `総合運 ${parsed.stars.overall}`,
-      `恋愛運 ${parsed.stars.love}`,
-      `仕事運 ${parsed.stars.work}`,
-      `金銭運 ${parsed.stars.money}`,
+      `総合${parsed.stars.overall} 恋${parsed.stars.love}`,
+      `仕${parsed.stars.work} 金${parsed.stars.money}`,
       '',
-      parsed.rankingTitle || '🏆 本日の総合運ランキング',
-      parsed.rankingLine,
+      parsed.rankingLine || '',
       '',
       newBody,
     ].join('\n');
@@ -1308,20 +1321,22 @@
       });
       return;
     }
-    const segments = rankingLine.split(/\s{2,}/).map(s => s.trim()).filter(Boolean);
+    const iconToPos = { '🥇': '1位', '🥈': '2位', '🥉': '3位', '▫': '4位', '4位': '4位' };
+    const _rx = /(🥇|🥈|🥉|▫|4位)\s*([ABO]+)型?/g;
+    const segments = [];
+    let _mm;
+    while ((_mm = _rx.exec(rankingLine)) !== null) {
+      segments.push({ label: iconToPos[_mm[1]] || _mm[1], bloodU: _mm[2].toUpperCase() });
+    }
     const cells = $$('.rp-cell');
     segments.forEach((seg, idx) => {
       if (idx >= cells.length) return;
-      const m = seg.match(/(.+?)\s+([ABO]+)型/);
       const cell = cells[idx];
-      if (m) {
-        $('.rp-pos', cell).textContent = m[1].trim();
-        const bloodStr = m[2].toUpperCase();
-        $('.rp-blood', cell).textContent = `${bloodStr} 型`;
-        $('.rp-blood', cell).className = `rp-blood ${bloodStr.toLowerCase()}`;
-        $('.rp-stars', cell).textContent = stars[bloodStr.toLowerCase()] || '—';
-        if (idx === 0) cell.classList.add('top'); else cell.classList.remove('top');
-      }
+      $('.rp-pos', cell).textContent = seg.label;
+      $('.rp-blood', cell).textContent = `${seg.bloodU} 型`;
+      $('.rp-blood', cell).className = `rp-blood ${seg.bloodU.toLowerCase()}`;
+      $('.rp-stars', cell).textContent = stars[seg.bloodU.toLowerCase()] || '—';
+      if (idx === 0) cell.classList.add('top'); else cell.classList.remove('top');
     });
   }
 
