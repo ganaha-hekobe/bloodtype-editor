@@ -14,7 +14,7 @@
     --text: #e7e9ea; --sub: #71767b; --accent: #1d9bf0;
     --ok: #00ba7c; --ng: #f4212e;
     --color-a: #ec7e93;  /* A 型 = ピンク (X アイコン色に合わせ) */
-    --color-b: #f4d03f;  /* B 型 = 黄 */
+    --color-b: #5eb0e5;  /* B 型 = 青 (X アイコン色に合わせ) */
     --color-o: #f5a623;  /* O 型 = オレンジ (X アイコン色に合わせ) */
     --color-ab: #b388eb; /* AB 型 = 紫 */
     --rank-gold: #ffd700;
@@ -153,7 +153,7 @@
     flex-shrink: 0;
   }
   .blood-a .avatar { background: var(--color-a); }
-  .blood-b .avatar { background: var(--color-b); color: #333; }
+  .blood-b .avatar { background: var(--color-b); color: #fff; }
   .blood-o .avatar { background: var(--color-o); }
   .blood-ab .avatar { background: var(--color-ab); }
   .account {
@@ -352,7 +352,7 @@
     background: transparent; border: 2px solid transparent; color: var(--sub);
   }
   .account-tab.active.tab-a { background: var(--color-a); color: #fff; }
-  .account-tab.active.tab-b { background: var(--color-b); color: #000; }
+  .account-tab.active.tab-b { background: var(--color-b); color: #fff; }
   .account-tab.active.tab-o { background: var(--color-o); color: #fff; }
   .account-tab.active.tab-ab { background: var(--color-ab); color: #fff; }
 
@@ -696,7 +696,7 @@
     background: transparent; border: 2px solid transparent; color: var(--sub);
   }
   .blood-tab.active.tab-a { background: var(--color-a); color: #fff; }
-  .blood-tab.active.tab-b { background: var(--color-b); color: #000; }
+  .blood-tab.active.tab-b { background: var(--color-b); color: #fff; }
   .blood-tab.active.tab-o { background: var(--color-o); color: #fff; }
   .blood-tab.active.tab-ab { background: var(--color-ab); color: #fff; }
 </style>
