@@ -209,6 +209,18 @@
     font-size: 14px; font-weight: 700; padding: 6px 0;
     border-top: 1px solid var(--border); margin-top: 4px;
   }
+  /* body 文字数カウンター (固定文言除いた body 部分のみ) */
+  .body-counter {
+    font-size: 10px; color: var(--sub);
+    font-family: ui-monospace, monospace;
+    letter-spacing: 0.02em;
+    text-align: right;
+    padding: 2px 4px 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .body-counter.warn { color: #c8a64a; }
+  .body-counter.over { color: var(--ng); font-weight: 700; }
+
   .one-liner {
     font-size: 14px; line-height: 1.7; white-space: pre-wrap;
     padding: 8px 10px; border-radius: 8px;
@@ -820,6 +832,7 @@
       </div>
       <div class="label-line">本日は集中！🎯</div>
       <div class="one-liner" contenteditable="true">本日は集中の日。細かい確認も大切ですが、流れに任せると進みやすい時間帯があります。視野を広めに持つと、午後に新しい気付きが訪れそうです。</div>
+      <div class="body-counter">— / 40-80</div>
     </div>
     <div class="card-footer">
       <span class="meta">bt-A-2026-06-30 / 07:00</span>
@@ -1404,6 +1417,7 @@
       <button class="reserve-mark" title="予約済にする"><svg class="icon-svg" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
         </div>
         <div class="acct-day-body" contenteditable="true">${escapeHtml(parsed.body)}</div>
+        <div class="body-counter">— / 40-80</div>
         <div class="acct-day-stars">
           ${escapeHtml(parsed.header)} ・ 恋愛 ${parsed.stars.love} ・ 仕事 ${parsed.stars.work} ・ 金運 ${parsed.stars.money}
         </div>
@@ -1659,10 +1673,12 @@
 
       const bodyEl = $('.one-liner, .acct-day-body', card);
       if (bodyEl) {
+        updateBodyCounter(card);
         bodyEl.addEventListener('input', () => {
           if (!card._entry) return;
           card._dirty = true;
           card.classList.add('editing');
+          updateBodyCounter(card);
         });
       }
 
@@ -1689,6 +1705,21 @@
     if (bodyEl) bodyEl.textContent = card._parsed.body || '';
     card._dirty = false;
     card.classList.remove('editing');
+    updateBodyCounter(card);
+  }
+
+  // body-counter 更新 (固定文言除いた body 部分の文字数、40-80 目安)
+  function updateBodyCounter(card) {
+    const bodyEl = $('.one-liner, .acct-day-body', card);
+    const counter = $('.body-counter', card);
+    if (!bodyEl || !counter) return;
+    // 絵文字を 1 文字カウント (spread で code point 分割)
+    const text = bodyEl.textContent || '';
+    const len = [...text].length;
+    counter.textContent = `${len} / 40-80`;
+    counter.classList.remove('warn', 'over');
+    if (len > 90) counter.classList.add('over');
+    else if (len > 80 || len < 30) counter.classList.add('warn');
   }
 
   async function handleSave(card, btn) {
