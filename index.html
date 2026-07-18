@@ -1680,6 +1680,12 @@
           card.classList.add('editing');
           updateBodyCounter(card);
         });
+        // ★paste 時は書式情報を破棄して plain text のみ挿入 (色/サイズ/フォント継承しない)★
+        bodyEl.addEventListener('paste', (e) => {
+          e.preventDefault();
+          const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+          if (text) document.execCommand('insertText', false, text);
+        });
       }
 
       const saveBtn = $('.btn-mini.save', card);
