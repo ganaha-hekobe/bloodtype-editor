@@ -286,7 +286,7 @@
   .reserve-mark:active { transform: scale(0.92); }
   .reserve-mark.done { border-color: #c8a64a; background: #c8a64a; color: #000; }
 
-  /* header 内の再生成ボタン (reserve-mark の左隣、同 shape) */
+  /* header 内の書き直し依頼ボタン (reserve-mark の左隣、同 shape) */
   .regen-mark {
     margin-left: auto;
     background: none;
@@ -303,6 +303,7 @@
   }
   .regen-mark:hover { border-color: #c8a64a; color: #c8a64a; background: rgba(200, 166, 74, 0.1); }
   .regen-mark:active { transform: scale(0.92); }
+  .regen-mark.requested { border-color: #c8a64a; background: #c8a64a; color: #000; }
   /* reserve-mark が続く場合 margin-left を打ち消し */
   .regen-mark + .reserve-mark { margin-left: 0; }
 
@@ -1430,6 +1431,7 @@
       `;
       card._entry = entry;
       card._parsed = parsed;
+      updateRewriteMark(card);
       list.appendChild(card);
     }
     attachCardListeners(list);
@@ -1514,6 +1516,7 @@
         `${entry.id} / ${(entry.scheduled_at || '').slice(11, 16)}`;
       card._entry = entry;
       card._parsed = parsed;
+      updateRewriteMark(card);
       card._dirty = false;
       const saveBtn = $('.btn-mini.save', card);
       saveBtn.classList.remove('dirty');
@@ -1714,6 +1717,20 @@
     updateBodyCounter(card);
   }
 
+  // 書き直し依頼マーク (regen-mark) の active class 更新
+  function updateRewriteMark(card) {
+    if (!card._entry) return;
+    const regenBtn = $('.regen-mark', card);
+    if (!regenBtn) return;
+    if (card._entry.rewrite_requested) {
+      regenBtn.classList.add('requested');
+      regenBtn.title = '書き直し依頼中 (もう一度押すと取消)';
+    } else {
+      regenBtn.classList.remove('requested');
+      regenBtn.title = '書き直しを依頼';
+    }
+  }
+
   // body-counter 更新 (固定文言除いた body 部分の文字数、40-77 目安 = X 上限ジャスト)
   function updateBodyCounter(card) {
     const bodyEl = $('.one-liner, .acct-day-body', card);
@@ -1811,26 +1828,20 @@
 
   async function handleRegenerate(card, btn) {
     if (!card._entry) return;
-    if (!confirm(`この投稿 (${card._entry.id}) を再生成しますか？\n(現在の content を削除 → generate.yml が missing 検出で新 content を補充、3-5 分後にリロード)`)) return;
     const blood = card.dataset.blood;
+    const alreadyRequested = card._entry.rewrite_requested;
+    const verdict = alreadyRequested ? 'unrewrite_request' : 'rewrite_request';
     btn.disabled = true;
-    btn.innerHTML = '処理中…';
     try {
-      const result = await fetchAPI('POST', '/api/regenerate', {
-        blood, id: card._entry.id,
+      await fetchAPI('POST', '/api/review', {
+        blood, id: card._entry.id, verdict,
       });
       state.data = await fetchAPI('GET', '/api/load');
       renderAll();
-      if (result.warning) {
-        alert(`⚠ ${result.warning}`);
-      } else if (result.triggered) {
-        alert('✓ 再生成 trigger 済 (3-5 分後にリロードで新 content が反映)');
-      }
     } catch (err) {
-      alert(`再生成失敗: ${err.message || err}`);
+      alert(`書き直し依頼処理失敗: ${err.message || err}`);
     } finally {
       btn.disabled = false;
-      btn.innerHTML = '<svg class="icon-svg" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>再生成';
     }
   }
 

@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     const payload = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const { blood, id, verdict } = payload;
     if (!BLOOD_TYPES.includes(blood)) throw new Error(`不明な blood: ${blood}`);
-    const validVerdicts = ['ok', 'ng', 'reserved', 'unreserve'];
+    const validVerdicts = ['ok', 'ng', 'reserved', 'unreserve', 'rewrite_request', 'unrewrite_request'];
     if (!validVerdicts.includes(verdict)) throw new Error(`不明な verdict: ${verdict}`);
 
     await mutatePosts(
@@ -56,6 +56,13 @@ export default async function handler(req, res) {
           post.reserved_at = nowJst();
           data.archive = data.archive || [];
           data.archive.push(post);
+        } else if (verdict === 'rewrite_request') {
+          // ★書き直し依頼: queue に残したまま flag 立て★ (朝ブリーフィングで私が回収)
+          queue[idx].rewrite_requested = true;
+          queue[idx].rewrite_requested_at = nowJst();
+        } else if (verdict === 'unrewrite_request') {
+          delete queue[idx].rewrite_requested;
+          delete queue[idx].rewrite_requested_at;
         }
       },
       `review(${blood}): ${id} → ${verdict}`,
